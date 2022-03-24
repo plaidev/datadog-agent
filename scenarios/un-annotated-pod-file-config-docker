@@ -1,0 +1,136 @@
+# Settings
+
+TODO: re-run with 7.36 in minikube
+
+minikube start --container-runtime=docker
+
+datadog-values.yaml
+  logs:
+    enabled: true
+    containerCollectAll: false
+  env:
+    - name: DD_LOGS_CONFIG_CCA_IN_AD
+      value: "false"
+  confd:
+    "bash.yaml": |-
+      ad_identifiers:
+       - bash
+      logs:
+        service: testy
+        source: testy
+
+---
+
+kubectl run bash --image=bash \
+	--command -- bash -c 'while true; do date; sleep 1; done'
+
+# Results
+
+2022-05-13 17:15:16 UTC | CORE | INFO | (pkg/logs/internal/launchers/kubernetes/launcher.go:98 in run) | Starting Kubernetes launcher
+
+// resolved config
+2022-05-13 18:43:19 UTC | CORE | INFO | (pkg/logs/schedulers/ad/scheduler.go:65 in Schedule) | scheduling integration.Config = {
+        Name: "bash",
+        Instances: {
+        }
+        InitConfig: nil,
+        MetricConfig: nil,
+        LogsConfig: []byte("logs:\n  service: testy\n  source: testy\n"),
+        ADIdentifiers: []string{"bash"},
+        AdvancedADIdentifiers: []integration.AdvancedADIdentifier(nil),
+        Provider: "file",
+        ServiceID: "docker://459bb2356bba337672c23f17ea0bb7d8547da5879190f29146a6f4334005e89c",
+        TaggerEntity: "",
+        ClusterCheck: false,
+        NodeName: "",
+        Source: file:/etc/datadog-agent/conf.d/bash.yaml,
+        IgnoreAutodiscoveryTags: false,
+        MetricsExcluded: false,
+        LogsExcluded: false,
+} (digest 4f4fea16ad75b0b4)
+
+// source based on resolved config
+2022-05-13 18:43:19 UTC | CORE | INFO | (pkg/logs/config/sources.go:45 in AddSource) | adding &LogsSource @ 0xc000e6b3b0 = {
+        Name: "bash",
+        Config: &LogsConfig{
+                Type: "docker",
+                Image: "",
+                Label: "",
+                Name: "",
+                Identifier: "459bb2356bba337672c23f17ea0bb7d8547da5879190f29146a6f4334005e89c",
+                Service: "testy",
+                Source: "testy",
+                SourceCategory: "",
+                Tags: []string(nil),
+                ProcessingRules: []*config.ProcessingRule(nil),
+                AutoMultiLine: nil,
+                AutoMultiLineSampleSize: 0,
+                AutoMultiLineMatchThreshold: 0.000000,
+        },
+        Status: &LogStatus{status: isPending, err: ""},
+        inputs: map[string]bool{},
+        Messages: []string{},
+        sourceType: "",
+        info: map[string]config.InfoProvider{},
+        parentSource: 0x0,
+        LatencyStats: &util.StatsTracker{allTimeAvg:0, allTimePeak:0, totalPoints:0, timeFrame:86400000000000, bucketFrame:3600000000000, avgPointsHead:(*util.taggedPoint)(nil), peakPointsHead:(*util.taggedPoint)(nil), aggregatedAvgPoints:[]*util.taggedPoint{}, aggregatedPeakPoints:[]*util.taggedPoint{}, timeProvider:(util.timeProvider)(0x31fd520), lock:(*sync.Mutex)(0xc002805d88)},
+        BytesRead: 0,
+        hiddenFromStatus: false,
+}
+
+// service config for container
+2022-05-13 18:43:19 UTC | CORE | INFO | (pkg/logs/schedulers/ad/scheduler.go:65 in Schedule) | scheduling integration.Config = {
+        Name: "",
+        Instances: nil,
+        InitConfig: nil,
+        MetricConfig: nil,
+        LogsConfig: []byte(""),
+        ADIdentifiers: []string(nil),
+        AdvancedADIdentifiers: []integration.AdvancedADIdentifier(nil),
+        Provider: "",
+        ServiceID: "docker://459bb2356bba337672c23f17ea0bb7d8547da5879190f29146a6f4334005e89c",
+        TaggerEntity: "container_id://459bb2356bba337672c23f17ea0bb7d8547da5879190f29146a6f4334005e89c",
+        ClusterCheck: false,
+        NodeName: "",
+        Source: ,
+        IgnoreAutodiscoveryTags: false,
+        MetricsExcluded: false,
+        LogsExcluded: false,
+} (digest 5579567ba9f905c3)
+
+// service
+2022-05-13 18:43:19 UTC | CORE | INFO | (pkg/logs/service/services.go:33 in AddService) | add &service.Service{Type:"docker", Identifier:"459bb2356bba337672c23f17ea0bb7d8547da5879190f29146a6f4334005e89c"}
+
+// service config for pod
+2022-05-13 18:43:19 UTC | CORE | INFO | (pkg/logs/schedulers/ad/scheduler.go:65 in Schedule) | scheduling integration.Config = {
+        Name: "",
+        Instances: nil,
+        InitConfig: nil,
+        MetricConfig: nil,
+        LogsConfig: []byte(""),
+        ADIdentifiers: []string(nil),
+        AdvancedADIdentifiers: []integration.AdvancedADIdentifier(nil),
+        Provider: "",
+        ServiceID: "kubernetes_pod://50f0527d-a158-4ab8-9b68-58e4168f73e9",
+        TaggerEntity: "kubernetes_pod_uid://50f0527d-a158-4ab8-9b68-58e4168f73e9",
+        ClusterCheck: false,
+        NodeName: "",
+        Source: ,
+        IgnoreAutodiscoveryTags: false,
+        MetricsExcluded: false,
+        LogsExcluded: false,
+} (digest af4ebd5a453576e5)
+
+# status
+
+  bash
+  ----
+    - Type: docker
+      Status: Pending
+      BytesRead: 0
+      Average Latency (ms): 0
+      24h Average Latency (ms): 0
+      Peak Latency (ms): 0
+      24h Peak Latency (ms): 0
+
+// k8s launcher only reads pod annotations, so it doesn't see the file config and thus does nothing

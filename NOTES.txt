@@ -1,0 +1,59 @@
+This should be an inspectably impact-free change, at the cost of readability;
+that is, a reviewer should be able to tell easiliy from each commit that, when
+cca_in_ad is false, the behavior does not change.
+
+When the cca_in_ad setting is true:
+
+* AD sends CCA configs for containers without other LogsConfig
+    * [DONE] AD no longer sends service configs (FIXME's)
+    * [WIP] AD sends CCA configs -- need to figure out what these look like
+
+* Logs-Agent doesn't handle services anymore
+    * [DONE] AD logs scheduler does not send services
+    * [DONE] CCA scheduler disabled
+    * [DONE] k8s launcher disabled
+    * [DONE] Docker launcher only pairs sources with services if feature flag is false
+
+* Logs-Agent handles CCA configs
+    * always handled by the (new) container launcher, creating child sources with
+      Config.Type=FileType when necessary.
+    * set source, service correctly
+        * [WIP] let's put this byzantine logic in a new module
+    * Container launcher recognizes kcur, dcur, force_dcur, path accessibility,
+      LogWhat, and registry in deciding whether to log a container from socket or file
+        * [WIP] let's put this byzantine logic in a new module
+    * some of this stuff is in dustin.mitchell/ac-1644-backup
+
+# Scenarios to test:
+
+* [DONE] annotated container {source/service}
+* [DONE] annotated container {source/service/type=file}
+* [DONE] annotated container {source/service} with dcuf
+* [DONE] un-annotated container (with CCA) dcuf=false
+* [DONE] un-annotated container (with CCA) dcuf=true
+* [DONE] annotated pod {source/service}
+* [DONE] annotated pod {source/service}, annotations changed at runtime
+* [DONE] annotated pod {source/service/type=file}
+* [DONE] un-annotated pod (with CCA) kcuf=false
+* [DONE] un-annotated pod (with CCA) kcuf=true
+* [DONE] un-annotated pod (with CCA) kcuf=true with docker runtime
+* [DONE] container from pod matching file config
+* [DONE] container matching file config
+* [DONE] container matching file config with dcuf
+
+^^ these are in scenarios/
+
+TODO
+ - working on a presentation of scenarios in
+   https://docs.google.com/presentation/d/1B_dJ3N-scZnY0QYUexYz-xC9uUvuvnM6k5v7lm6097w/edit#slide=id.g12a28993b63_0_0
+   but the annotated-container-source-service is not behaving right?!
+   - updating scenarios/ with re-runs, based on 7.36.0
+   - patched 7.36.0 with logging in `dustin.mitchell/ac-1644-logging-on-7-36` branch, image `dustin-mitchell-ac-1644-logging-on-7-36-py3`
+   - need to re-run gke, minikube stuff
+
+ - several scenarios for heisenbugs with annotation changes, but this doesn't
+   work and is out of scope for presentation
+ - figure out how AD's approach to annotations differs from logs-agent -- do
+   we stil get annotated containers from AD?
+ - Older WIP notes were in https://docs.google.com/document/d/1i_CHN5FShB6f69d0OJRRxqRBkOSMVrROMNOTFTlUnRQ/edit
+ - do not try to solve k8s+containerd issues, but don't make them worse

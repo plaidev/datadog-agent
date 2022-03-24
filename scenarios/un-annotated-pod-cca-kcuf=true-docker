@@ -1,0 +1,117 @@
+# Settings
+
+TODO: re-run with 7.36 in minikube
+
+minikube start --container-runtime=docker
+
+datadog-values.yaml:
+  logs:
+    enabled: true
+    containerCollectAll: true
+  env:
+    - name: DD_LOGS_CONFIG_CCA_IN_AD
+      value: "false"
+
+and in the pod by default:
+
+    - name: DD_LOGS_CONFIG_K8S_CONTAINER_USE_FILE
+      value: "true"
+
+---
+
+k run bash --image=bash \
+	--command -- bash -c 'while true; do date; sleep 1; done'
+
+# Results
+
+// service config for the container; note ServiceID is `docker`
+2022-05-13 13:35:08 UTC | CORE | INFO | (pkg/logs/schedulers/ad/scheduler.go:65 in Schedule) | scheduling integration.Config = {
+        Name: "",
+        Instances: nil,
+        InitConfig: nil,
+        MetricConfig: nil,
+        LogsConfig: []byte(""),
+        ADIdentifiers: []string(nil),
+        AdvancedADIdentifiers: []integration.AdvancedADIdentifier(nil),
+        Provider: "",
+        ServiceID: "docker://5ec20993d9ba1b2b7cd37badecc629a54593e37183212bdae0776abf714b7a23",
+        TaggerEntity: "container_id://5ec20993d9ba1b2b7cd37badecc629a54593e37183212bdae0776abf714b7a23",
+        ClusterCheck: false,
+        NodeName: "",
+        Source: ,
+        IgnoreAutodiscoveryTags: false,
+        MetricsExcluded: false,
+        LogsExcluded: false,
+} (digest 4da58b6eef155323)
+
+// AD scheduler creates a service
+2022-05-13 13:35:08 UTC | CORE | INFO | (pkg/logs/service/services.go:33 in AddService) | add &service.Service{Type:"docker", Identifier:"5ec20993d9ba1b2b7cd37badecc629a54593e37183212bdae0776abf714b7a23"}
+
+// service config for the pod
+2022-05-13 13:35:08 UTC | CORE | INFO | (pkg/logs/schedulers/ad/scheduler.go:65 in Schedule) | scheduling integration.Config = {
+        Name: "",
+        Instances: nil,
+        InitConfig: nil,
+        MetricConfig: nil,
+        LogsConfig: []byte(""),
+        ADIdentifiers: []string(nil),
+        AdvancedADIdentifiers: []integration.AdvancedADIdentifier(nil),
+        Provider: "",
+        ServiceID: "kubernetes_pod://3afeda2c-7b61-410d-8526-6087cd7045fa",
+        TaggerEntity: "kubernetes_pod_uid://3afeda2c-7b61-410d-8526-6087cd7045fa",
+        ClusterCheck: false,
+        NodeName: "",
+        Source: ,
+        IgnoreAutodiscoveryTags: false,
+        MetricsExcluded: false,
+        LogsExcluded: false,
+} (digest 8363162c300edfc2)
+
+// source for pod from k8s launcher
+2022-05-13 13:35:08 UTC | CORE | DEBUG | (pkg/logs/internal/launchers/kubernetes/launcher.go:306 in getPath) | Using the latest kubernetes logs path for container bash
+2022-05-13 13:35:08 UTC | CORE | INFO | (pkg/logs/config/sources.go:45 in AddSource) | adding &LogsSource @ 0xc000710380 = {
+        Name: "default/bash/bash",
+        Config: &LogsConfig{
+                Type: "file",
+                Path: "/var/log/pods/default_bash_3afeda2c-7b61-410d-8526-6087cd7045fa/bash/*.log",
+                Encoding: "",
+                ExcludePaths: []string(nil),
+                TailingMode: "",
+                Service: "bash",
+                Source: "bash",
+                SourceCategory: "",
+                Tags: []string(nil),
+                ProcessingRules: []*config.ProcessingRule(nil),
+                AutoMultiLine: nil,
+                AutoMultiLineSampleSize: 0,
+                AutoMultiLineMatchThreshold: 0.000000,
+        },
+        Status: &LogStatus{status: isPending, err: ""},
+        inputs: map[string]bool{},
+        Messages: []string{},
+        sourceType: "docker",
+        info: map[string]config.InfoProvider{},
+        parentSource: 0x0,
+        LatencyStats: &util.StatsTracker{allTimeAvg:0, allTimePeak:0, totalPoints:0, timeFrame:86400000000000, bucketFrame:3600000000000, avgPointsHead:(*util.taggedPoint)(nil), peakPointsHead:(*util.taggedPoint)(nil), aggregatedAvgPoints:[]*util.taggedPoint{}, aggregatedPeakPoints:[]*util.taggedPoint{}, timeProvider:(util.timeProvider)(0x31fd520), lock:(*sync.Mutex)(0xc0033c19d8)},
+        BytesRead: 0,
+        hiddenFromStatus: false,
+}
+
+# Status
+
+  default/bash/bash
+  -----------------
+    - Type: file
+      Identifier: 5ec20993d9ba1b2b7cd37badecc629a54593e37183212bdae0776abf714b7a23
+      Path: /var/log/pods/default_bash_3afeda2c-7b61-410d-8526-6087cd7045fa/bash/*.log
+      Status: OK
+        1 files tailed out of 1 files matching
+      Inputs:
+        /var/log/pods/default_bash_3afeda2c-7b61-410d-8526-6087cd7045fa/bash/0.log
+      BytesRead: 0
+      Average Latency (ms): 0
+      24h Average Latency (ms): 0
+      Peak Latency (ms): 0
+      24h Peak Latency (ms): 0
+
+// kubernetes launcher doesn't use cca source

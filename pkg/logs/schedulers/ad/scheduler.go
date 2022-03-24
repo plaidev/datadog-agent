@@ -214,6 +214,7 @@ func (s *Scheduler) toSources(config integration.Config) ([]*logsConfig.LogSourc
 			return nil, fmt.Errorf("invalid entity: %v", err)
 		}
 	}
+	// service = {Provider: containerd, identifier: <sha>}
 
 	configName := s.configName(config)
 	var sources []*logsConfig.LogSource

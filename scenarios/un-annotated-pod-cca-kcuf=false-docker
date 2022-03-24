@@ -1,0 +1,126 @@
+# Settings
+
+TODO: re-run with 7.36 in minikube
+
+minikube start --container-runtime=docker
+
+datadog-values.yaml:
+  logs:
+    enabled: true
+    containerCollectAll: true
+    containerCollectUsingFiles: false  // kcuf
+  env:
+    - name: DD_LOGS_CONFIG_CCA_IN_AD
+      value: "false"
+
+---
+
+kubernetes run bash --image=bash \
+	--command -- bash -c 'while true; do date; sleep 1; done'
+
+# Results
+
+2022-05-13 13:45:02 UTC | CORE | INFO | (pkg/logs/internal/launchers/docker/launcher.go:142 in run) | Starting Docker launcher
+
+// CCA source
+2022-05-13 13:45:06 UTC | CORE | INFO | (pkg/logs/config/sources.go:45 in AddSource) | adding &LogsSource @ 0xc000403960 = {
+        Name: "container_collect_all",
+        Config: &LogsConfig{
+                Type: "docker",
+                Image: "",
+                Label: "",
+                Name: "",
+                Identifier: "",
+                Service: "docker",
+                Source: "docker",
+                SourceCategory: "",
+                Tags: []string(nil),
+                ProcessingRules: []*config.ProcessingRule(nil),
+                AutoMultiLine: nil,
+                AutoMultiLineSampleSize: 0,
+                AutoMultiLineMatchThreshold: 0.000000,
+        },
+        Status: &LogStatus{status: isPending, err: ""},
+        inputs: map[string]bool{},
+        Messages: []string{},
+        sourceType: "",
+        info: map[string]config.InfoProvider{},
+        parentSource: 0x0,
+        LatencyStats: &util.StatsTracker{allTimeAvg:0, allTimePeak:0, totalPoints:0, timeFrame:86400000000000, bucketFrame:3600000000000, avgPointsHead:(*util.taggedPoint)(nil), peakPointsHead:(*util.taggedPoint)(nil), aggregatedAvgPoints:[]*util.taggedPoint{}, aggregatedPeakPoints:[]*util.taggedPoint{}, timeProvider:(util.timeProvider)(0x31fd520), lock:(*sync.Mutex)(0xc0008e4330)},
+        BytesRead: 0,
+        hiddenFromStatus: false,
+}
+
+// service config for container
+2022-05-13 13:56:10 UTC | CORE | INFO | (pkg/logs/schedulers/ad/scheduler.go:65 in Schedule) | scheduling integration.Config = {
+        Name: "",
+        Instances: nil,
+        InitConfig: nil,
+        MetricConfig: nil,
+        LogsConfig: []byte(""),
+        ADIdentifiers: []string(nil),
+        AdvancedADIdentifiers: []integration.AdvancedADIdentifier(nil),
+        Provider: "",
+        ServiceID: "docker://30f8d165f8101182969eae2fb3931b91c0385c8e28d61e7acdf32f0598e7a395",
+        TaggerEntity: "container_id://30f8d165f8101182969eae2fb3931b91c0385c8e28d61e7acdf32f0598e7a395",
+        ClusterCheck: false,
+        NodeName: "",
+        Source: ,
+        IgnoreAutodiscoveryTags: false,
+        MetricsExcluded: false,
+        LogsExcluded: false,
+} (digest d98905f0f5967754)
+
+// service
+2022-05-13 13:56:10 UTC | CORE | INFO | (pkg/logs/service/services.go:33 in AddService) | add &service.Service{Type:"docker", Identifier:"30f8d165f8101182969eae2fb3931b91c0385c8e28d61e7acdf32f0598e7a395"}
+
+// service config for pod
+2022-05-13 13:56:10 UTC | CORE | INFO | (pkg/logs/schedulers/ad/scheduler.go:65 in Schedule) | scheduling integration.Config = {
+        Name: "",
+        Instances: nil,
+        InitConfig: nil,
+        MetricConfig: nil,
+        LogsConfig: []byte(""),
+        ADIdentifiers: []string(nil),
+        AdvancedADIdentifiers: []integration.AdvancedADIdentifier(nil),
+        Provider: "",
+        ServiceID: "kubernetes_pod://df86b40f-07cd-450e-ab43-578b4b8f07ef",
+        TaggerEntity: "kubernetes_pod_uid://df86b40f-07cd-450e-ab43-578b4b8f07ef",
+        ClusterCheck: false,
+        NodeName: "",
+        Source: ,
+        IgnoreAutodiscoveryTags: false,
+        MetricsExcluded: false,
+        LogsExcluded: false,
+} (digest 595b48f66d7676c0)
+
+// new file source, child of CCA source
+2022-05-13 13:56:10 UTC | CORE | INFO | (pkg/logs/config/sources.go:45 in AddSource) | adding &LogsSource @ 0xc000eb24d0 = {
+        Name: "container_collect_all",
+        Config: &LogsConfig{
+                Type: "file",
+                Path: "/var/lib/docker/containers/30f8d165f8101182969eae2fb3931b91c0385c8e28d61e7acdf32f0598e7a395/30f8d165f8101182969eae2fb3931b91c0385c8e28d61e7acdf32f0598e7a395-json.log",
+                Encoding: "",
+                ExcludePaths: []string(nil),
+                TailingMode: "",
+                Service: "bash",
+                Source: "bash",
+                SourceCategory: "",
+                Tags: []string(nil),
+                ProcessingRules: []*config.ProcessingRule(nil),
+                AutoMultiLine: nil,
+                AutoMultiLineSampleSize: 0,
+                AutoMultiLineMatchThreshold: 0.000000,
+        },
+        Status: &LogStatus{status: isSuccess, err: ""},
+        inputs: map[string]bool{},
+        Messages: []string{},
+        sourceType: "docker",
+        info: map[string]config.InfoProvider{},
+        parentSource: 0xc000403960,
+        LatencyStats: &util.StatsTracker{allTimeAvg:0, allTimePeak:0, totalPoints:0, timeFrame:86400000000000, bucketFrame:3600000000000, avgPointsHead:(*util.taggedPoint)(nil), peakPointsHead:(*util.taggedPoint)(nil), aggregatedAvgPoints:[]*util.taggedPoint{}, aggregatedPeakPoints:[]*util.taggedPoint{}, timeProvider:(util.timeProvider)(0x31fd520), lock:(*sync.Mutex)(0xc0018e7ce8)},
+        BytesRead: 0,
+        hiddenFromStatus: false,
+}
+
+// used files because logs_config.docker_container_use_file is true by default
