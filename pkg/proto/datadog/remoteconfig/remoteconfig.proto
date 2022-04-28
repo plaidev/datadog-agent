@@ -33,7 +33,9 @@ message TopMeta {
 }
 
 message File {
+  // The File path as descirbed in the TUF metadata format
   string path = 1;
+  // The raw config file data
   bytes raw = 2;
 }
 
@@ -62,65 +64,96 @@ message LatestConfigsResponse {
 
 message Client {
   ClientState state = 1;
+  // The remote config client's identifier. Created by the client on initial creation.
   string id = 2;
+  // The products this client needs configuration updates for.
   repeated string products = 3;
   reserved 4, 5;
+  // True if this client is a tracer.
   bool is_tracer = 6;
+  // Tracer information if `is_tracer` is true.
   ClientTracer client_tracer = 7;
+  // True if this client is an agent.
   bool is_agent = 8;
+  // Agent information if `is_agent` is true.
   ClientAgent client_agent = 9;
 }
 
 message ClientTracer {
+  // Tracer's unique runtime identifier
   string runtime_id = 1;
+  // The programming language of the tracer
   string language = 2;
+  // Tracer's semantic version
   string tracer_version = 3;
+  // The name of this tracer service
   string service = 4;
   string env = 5;
   string app_version = 6;
 }
 
 message ClientAgent {
+  // The name of this agent
   string name = 1;
+  // The agent's semantic version
   string version = 2;
 }
 
 message ConfigState {
+  // The configuration ID
   string id = 1;
+  // The version of this config
   uint64 version = 2;
+  // The product this config is associated with
   string product = 3;
 }
 
 message ClientState {
+  // The last known TUF root version. A client should always have an embedded root.
   uint64 root_version = 1;
+  // The last known TUF targets version. 0 if no updates have been received yet.
   uint64 targets_version = 2;
+  // Information about the configs currently stored by this agent.
   repeated ConfigState config_states = 3;
+  // Whether or not an error has occurred that should be reported to the DD backend
   bool has_error = 4;
+  // The error details
   string error = 5;
+  // Opaque data stored by the Remote Config backend - should be ignored by clients.
   bytes backend_client_state = 6; 
 }
 
 // Client queries
 
 message TargetFileHash {
+  // The cryptographic hash algorithm used to generate `hash`
   string algorithm = 1;
+  // The hash that results from applying the given `algorithm`
   bytes hash = 2;
 }
 
 message TargetFileMeta {
+  // The full path of the config file
   string path = 1;
+  // Length of the config file
   int64 length = 2;
+  // 
   repeated TargetFileHash hashes = 3;
 }
 
 message ClientGetConfigsRequest {
+  // Information about the client making the request
   Client client = 1;
+  // TUF Target file metadata used to optimize response size
   repeated TargetFileMeta cached_target_files = 2;
 }
 
 message ClientGetConfigsResponse {
+  // Updated TUF root metadata files
   repeated bytes roots = 1;
+  // The most recent TUF targets file, in JSON
   bytes targets = 2;
+  // The raw config files. Only new or updated files from the last request are sent.
   repeated File target_files = 3;
 }
 
