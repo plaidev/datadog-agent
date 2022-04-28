@@ -6,24 +6,45 @@ import (
 )
 
 func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
+	var direction string
+	if aggFlow.Direction == 0 {
+		direction = "ingress"
+	} else {
+		direction = "egress"
+	}
 	return payload.FlowPayload{
 		FlowType:          string(aggFlow.FlowType),
 		ReceivedTimestamp: aggFlow.ReceivedTimestamp,
 		SamplingRate:      aggFlow.SamplingRate,
-		Direction:         aggFlow.Direction,
-		SamplerAddr:       aggFlow.SamplerAddr,
-		StartTimestamp:    aggFlow.StartTimestamp,
-		EndTimestamp:      aggFlow.EndTimestamp,
-		Bytes:             aggFlow.Bytes,
-		Packets:           aggFlow.Packets,
-		SrcAddr:           aggFlow.SrcAddr,
-		DstAddr:           aggFlow.DstAddr,
-		EtherType:         aggFlow.EtherType,
-		Proto:             aggFlow.Proto,
-		SrcPort:           aggFlow.SrcPort,
-		DstPort:           aggFlow.DstPort,
-		InputInterface:    aggFlow.InputInterface,
-		OutputInterface:   aggFlow.OutputInterface,
-		Tos:               aggFlow.Tos,
+		Direction:         direction,
+		Exporter: payload.Exporter{
+			IP: aggFlow.SamplerAddr,
+		},
+		StartTimestamp: aggFlow.StartTimestamp,
+		EndTimestamp:   aggFlow.EndTimestamp,
+		Bytes:          aggFlow.Bytes,
+		Packets:        aggFlow.Packets,
+		EtherType:      aggFlow.EtherType,
+		IPProtocol:     aggFlow.IPProtocol,
+		Tos:            aggFlow.Tos,
+		Source: payload.Endpoint{
+			IP:   aggFlow.SrcAddr,
+			Port: aggFlow.SrcPort,
+		},
+		Destination: payload.Endpoint{
+			IP:   aggFlow.DstAddr,
+			Port: aggFlow.DstPort,
+		},
+		Ingress: payload.ObservationPoint{
+			Interface: payload.Interface{
+				Index: aggFlow.InputInterface,
+			},
+		},
+		Egress: payload.ObservationPoint{
+			Interface: payload.Interface{
+				Index: aggFlow.OutputInterface,
+			},
+		},
+		Tags: []string{"namespace:abcd"},
 	}
 }

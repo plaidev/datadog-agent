@@ -5,24 +5,48 @@
 
 package payload
 
+// Exporter contains exporter details
+type Exporter struct {
+	IP string `json:"ip"`
+}
+
+// Endpoint contains source or destination endpoint details
+type Endpoint struct {
+	IP   string `json:"ip"`
+	Port uint32 `json:"port"`
+	// TODO: mac address
+	// TODO: mask
+}
+
+// Interface contains interface details
+type Interface struct {
+	Index uint32 `json:"index"`
+}
+
+// ObservationPoint contains ingress or egress observation point
+type ObservationPoint struct {
+	Interface Interface `json:"interface"`
+}
+
 // FlowPayload contains network devices flows
 type FlowPayload struct {
-	FlowType          string `json:"flow_type"`
-	ReceivedTimestamp uint64 `json:"received_timestamp"`
-	SamplingRate      uint64 `json:"sampling_rate"`
-	Direction         uint32 `json:"direction"`
-	SamplerAddr       string `json:"sampler_addr"`
-	StartTimestamp    uint64 `json:"start_timestamp"`
-	EndTimestamp      uint64 `json:"end_timestamp"`
-	Bytes             uint64 `json:"bytes"`
-	Packets           uint64 `json:"packets"`
-	SrcAddr           string `json:"src_addr"`
-	DstAddr           string `json:"dst_addr"`
-	EtherType         uint32 `json:"ether_type"`
-	Proto             uint32 `json:"proto"`
-	SrcPort           uint32 `json:"src_port"`
-	DstPort           uint32 `json:"dst_port"`
-	InputInterface    uint32 `json:"input_interface"`
-	OutputInterface   uint32 `json:"output_interface"`
-	Tos               uint32 `json:"Tos"`
+	FlowType          string           `json:"type"`
+	ReceivedTimestamp uint64           `json:"received_timestamp"`
+	SamplingRate      uint64           `json:"sampling_rate"`
+	Direction         string           `json:"direction"`
+	Exporter          Exporter         `json:"exporter"`
+	StartTimestamp    uint64           `json:"start_timestamp"`
+	EndTimestamp      uint64           `json:"end_timestamp"`
+	Bytes             uint64           `json:"bytes"`
+	Packets           uint64           `json:"packets"`
+	EtherType         uint32           `json:"ether_type"`
+	IPProtocol        uint32           `json:"ip_protocol"`
+	Tos               uint32           `json:"tos"`
+	Source            Endpoint         `json:"source"`
+	Destination       Endpoint         `json:"destination"`
+	Ingress           ObservationPoint `json:"ingress"`
+	Egress            ObservationPoint `json:"egress"`
+	Tags              []string         `json:"tags"`
+	// TODO: tcp_flags
+	// TODO: next_hop IP
 }

@@ -69,6 +69,7 @@ func (agg *FlowAggregator) sendFlows(flows []*common.Flow) {
 		agg.sender.Count("datadog.newflow.aggregator.flows_flushed", 1, "", flow.TelemetryTags())
 		flowPayload := buildPayload(flow)
 		payloadBytes, err := json.Marshal(flowPayload)
+		log.Tracef("EP Flow: %s", string(payloadBytes))
 		if err != nil {
 			log.Errorf("Error marshalling device metadata: %s", err)
 			continue

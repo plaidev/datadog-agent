@@ -8,7 +8,7 @@ import (
 
 // Flow contains flow info used for aggreagtion
 type Flow struct {
-	FlowType          FlowType `json:"flow_type"`
+	FlowType          FlowType `json:"type"`
 	ReceivedTimestamp uint64   `json:"received_timestamp"`
 	SamplingRate      uint64   `json:"sampling_rate"`
 	Direction         uint32   `json:"direction"`
@@ -32,7 +32,7 @@ type Flow struct {
 	EtherType uint32 `json:"ether_type,omitempty"`
 
 	// Layer 4 protocol
-	Proto uint32 `json:"proto"` // FLOW KEY
+	IPProtocol uint32 `json:"ip_protocol"` // FLOW KEY
 
 	// Ports for UDP and TCP
 	SrcPort uint32 `json:"src_port"` // FLOW KEY
@@ -54,7 +54,7 @@ func (f *Flow) AggregationHash() string {
 	h.Write([]byte(f.DstAddr))                           //nolint:errcheck
 	h.Write([]byte(strconv.Itoa(int(f.SrcPort))))        //nolint:errcheck
 	h.Write([]byte(strconv.Itoa(int(f.DstPort))))        //nolint:errcheck
-	h.Write([]byte(strconv.Itoa(int(f.Proto))))          //nolint:errcheck
+	h.Write([]byte(strconv.Itoa(int(f.IPProtocol))))     //nolint:errcheck
 	h.Write([]byte(strconv.Itoa(int(f.Tos))))            //nolint:errcheck
 	h.Write([]byte(strconv.Itoa(int(f.InputInterface)))) //nolint:errcheck
 	return strconv.FormatUint(h.Sum64(), 16)

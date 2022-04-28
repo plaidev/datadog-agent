@@ -23,7 +23,7 @@ func ConvertFlow(srcFlow *flowpb.FlowMessage) *common.Flow {
 		SrcAddr:           net.IP(srcFlow.SrcAddr).String(),
 		DstAddr:           net.IP(srcFlow.DstAddr).String(),
 		EtherType:         srcFlow.Etype,
-		Proto:             srcFlow.Proto,
+		IPProtocol:        srcFlow.Proto,
 		SrcPort:           srcFlow.SrcPort,
 		DstPort:           srcFlow.DstPort,
 		InputInterface:    srcFlow.InIf,
