@@ -45,6 +45,5 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 				Index: aggFlow.OutputInterface,
 			},
 		},
-		Tags: []string{"namespace:abcd"},
 	}
 }

@@ -46,7 +46,7 @@ type FlowPayload struct {
 	Destination       Endpoint         `json:"destination"`
 	Ingress           ObservationPoint `json:"ingress"`
 	Egress            ObservationPoint `json:"egress"`
-	Tags              []string         `json:"tags"`
+	// TODO: Tags
 	// TODO: tcp_flags
 	// TODO: next_hop IP
 }
