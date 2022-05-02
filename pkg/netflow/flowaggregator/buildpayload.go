@@ -13,15 +13,15 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		direction = "egress"
 	}
 	return payload.FlowPayload{
-		FlowType: string(aggFlow.FlowType),
-		//Timestamp:    aggFlow.ReceivedTimestamp,
+		FlowType:     string(aggFlow.FlowType),
+		Timestamp:    aggFlow.ReceivedTimestamp,
 		SamplingRate: aggFlow.SamplingRate,
 		Direction:    direction,
 		Exporter: payload.Exporter{
 			IP: aggFlow.SamplerAddr,
 		},
-		//Start:      aggFlow.StartTimestamp,
-		//End:        aggFlow.EndTimestamp,
+		Start:      aggFlow.StartTimestamp,
+		End:        aggFlow.EndTimestamp,
 		Bytes:      aggFlow.Bytes,
 		Packets:    aggFlow.Packets,
 		EtherType:  aggFlow.EtherType,
