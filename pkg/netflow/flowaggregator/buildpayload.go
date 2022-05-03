@@ -13,8 +13,8 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		direction = "egress"
 	}
 	return payload.FlowPayload{
-		FlowType:     string(aggFlow.FlowType),
-		Timestamp:    aggFlow.ReceivedTimestamp,
+		FlowType: string(aggFlow.FlowType),
+		//Timestamp:    aggFlow.ReceivedTimestamp,
 		SamplingRate: aggFlow.SamplingRate,
 		Direction:    direction,
 		Exporter: payload.Exporter{
