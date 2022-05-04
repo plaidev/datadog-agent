@@ -117,7 +117,7 @@ type BufferedData struct {
 // Connections wraps a collection of ConnectionStats
 type Connections struct {
 	BufferedData
-	DNS                         map[util.Address][]string
+	DNS                         map[util.Address][]dns.Hostname
 	ConnTelemetry               map[ConnTelemetryType]int64
 	CompilationTelemetryByAsset map[string]RuntimeCompilationTelemetry
 	HTTP                        map[http.Key]http.RequestStats
@@ -131,20 +131,20 @@ type ConnTelemetryType string
 //revive:disable:exported
 const (
 	MonotonicKprobesTriggered          ConnTelemetryType = "kprobes_triggered"
-	MonotonicKprobesMissed                               = "kprobes_missed"
-	MonotonicConnsClosed                                 = "conns_closed"
-	MonotonicConntrackRegisters                          = "conntrack_registers"
-	MonotonicConntrackRegistersDropped                   = "conntrack_registers_dropped"
-	MonotonicDNSPacketsProcessed                         = "dns_packets_processed"
-	MonotonicUDPSendsProcessed                           = "udp_sends_processed"
-	MonotonicUDPSendsMissed                              = "udp_sends_missed"
-	DNSStatsDropped                                      = "dns_stats_dropped"
-	ConnsBpfMapSize                                      = "conns_bpf_map_size"
-	ConntrackSamplingPercent                             = "conntrack_sampling_percent"
-	NPMDriverFlowsMissedMaxExceeded                      = "driver_flows_missed_max_exceeded"
-	MonotonicDNSPacketsDropped                           = "dns_packets_dropped"
-	HTTPRequestsDropped                                  = "http_requests_dropped"
-	HTTPRequestsMissed                                   = "http_requests_missed"
+	MonotonicKprobesMissed             ConnTelemetryType = "kprobes_missed"
+	MonotonicConnsClosed               ConnTelemetryType = "conns_closed"
+	MonotonicConntrackRegisters        ConnTelemetryType = "conntrack_registers"
+	MonotonicConntrackRegistersDropped ConnTelemetryType = "conntrack_registers_dropped"
+	MonotonicDNSPacketsProcessed       ConnTelemetryType = "dns_packets_processed"
+	MonotonicUDPSendsProcessed         ConnTelemetryType = "udp_sends_processed"
+	MonotonicUDPSendsMissed            ConnTelemetryType = "udp_sends_missed"
+	DNSStatsDropped                    ConnTelemetryType = "dns_stats_dropped"
+	ConnsBpfMapSize                    ConnTelemetryType = "conns_bpf_map_size"
+	ConntrackSamplingPercent           ConnTelemetryType = "conntrack_sampling_percent"
+	NPMDriverFlowsMissedMaxExceeded    ConnTelemetryType = "driver_flows_missed_max_exceeded"
+	MonotonicDNSPacketsDropped         ConnTelemetryType = "dns_packets_dropped"
+	HTTPRequestsDropped                ConnTelemetryType = "http_requests_dropped"
+	HTTPRequestsMissed                 ConnTelemetryType = "http_requests_missed"
 )
 
 //revive:enable
@@ -332,7 +332,7 @@ func BeautifyKey(key string) string {
 }
 
 // ConnectionSummary returns a string summarizing a connection
-func ConnectionSummary(c *ConnectionStats, names map[util.Address][]string) string {
+func ConnectionSummary(c *ConnectionStats, names map[util.Address][]dns.Hostname) string {
 	str := fmt.Sprintf(
 		"[%s%s] [PID: %d] [%v:%d ⇄ %v:%d] ",
 		c.Type,
@@ -371,10 +371,16 @@ func ConnectionSummary(c *ConnectionStats, names map[util.Address][]string) stri
 	return str
 }
 
-func printAddress(address util.Address, names []string) string {
+func printAddress(address util.Address, names []dns.Hostname) string {
 	if len(names) == 0 {
 		return address.String()
 	}
 
-	return strings.Join(names, ",")
+	var b strings.Builder
+	b.WriteString(dns.ToString(names[0]))
+	for _, s := range names[1:] {
+		b.WriteString(",")
+		b.WriteString(dns.ToString(s))
+	}
+	return b.String()
 }

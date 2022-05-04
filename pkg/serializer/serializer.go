@@ -401,7 +401,7 @@ func (s *Serializer) SendProcessesMetadata(data interface{}) error {
 	if err != nil {
 		return fmt.Errorf("could not serialize processes metadata payload: %s", err)
 	}
-	compressedPayload, err := compression.Compress(nil, payload)
+	compressedPayload, err := compression.Compress(payload)
 	if err != nil {
 		return fmt.Errorf("could not compress processes metadata payload: %s", err)
 	}
@@ -467,6 +467,8 @@ func (s *Serializer) SendContainerLifecycleEvent(msgs []ContainerLifecycleMessag
 		if err := s.contlcycleForwarder.SubmitContainerLifecycleEvents(payloads, extraHeaders); err != nil {
 			return log.Errorf("Unable to submit container lifecycle payload: %w", err)
 		}
+
+		log.Tracef("Sent container lifecycle event %+v", msg)
 	}
 
 	return nil

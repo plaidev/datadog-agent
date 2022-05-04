@@ -108,7 +108,12 @@ func (m *Module) Init() error {
 	// start api server
 	m.apiServer.Start(m.ctx)
 
-	m.probe.SetEventHandler(m)
+	m.probe.AddEventHandler(model.UnknownEventType, m)
+
+	// initialize extra event monitors
+	if m.config.EventMonitoring {
+		InitEventMonitors(m)
+	}
 
 	// initialize the eBPF manager and load the programs and maps in the kernel. At this stage, the probes are not
 	// running yet.
@@ -121,20 +126,21 @@ func (m *Module) Init() error {
 
 // Start the module
 func (m *Module) Start() error {
-	// start the manager and its probes / perf maps
-	if err := m.probe.Start(); err != nil {
-		return errors.Wrap(err, "failed to start probe")
-	}
-
-	m.reloader.Start()
-
-	if err := m.Reload(); err != nil {
-		return err
+	// setup the manager and its probes / perf maps
+	if err := m.probe.Setup(); err != nil {
+		return errors.Wrap(err, "failed to setup probe")
 	}
 
 	// fetch the current state of the system (example: mount points, running processes, ...) so that our user space
 	// context is ready when we start the probes
 	if err := m.probe.Snapshot(); err != nil {
+		return err
+	}
+
+	m.probe.Start()
+	m.reloader.Start()
+
+	if err := m.Reload(); err != nil {
 		return err
 	}
 
@@ -241,6 +247,11 @@ func (m *Module) triggerReload() {
 
 // Reload the rule set
 func (m *Module) Reload() error {
+	// not enabled, do not reload rule
+	if !m.config.IsEnabled() {
+		return nil
+	}
+
 	m.Lock()
 	defer m.Unlock()
 
@@ -553,6 +564,7 @@ func NewModule(cfg *sconfig.Config, opts ...Opts) (module.Module, error) {
 	m.reloader = debouncer.New(3*time.Second, m.triggerReload)
 
 	seclog.SetPatterns(cfg.LogPatterns...)
+	seclog.SetTags(cfg.LogTags...)
 
 	sapi.RegisterSecurityModuleServer(m.grpcServer, m.apiServer)
 

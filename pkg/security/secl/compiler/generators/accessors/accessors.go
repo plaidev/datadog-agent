@@ -6,6 +6,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	_ "embed"
 	"errors"
 	"flag"
@@ -95,7 +97,7 @@ func handleField(module *common.Module, astFile *ast.File, name, alias, prefix, 
 	}
 
 	switch fieldType {
-	case "string", "bool", "int", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "net.IP":
+	case "string", "bool", "int", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "net.IPNet":
 		if prefix != "" {
 			name = prefix + "." + name
 			alias = aliasPrefix + "." + alias
@@ -221,23 +223,27 @@ func handleSpec(module *common.Module, astFile *ast.File, spec interface{}, pref
 						for _, tag := range tags.Tags() {
 							switch tag.Key {
 							case "field":
-								splitted := strings.SplitN(tag.Value(), ",", 4)
-								alias := splitted[0]
-								if alias == "-" {
-									continue FIELD
-								}
-								field := seclField{name: alias}
-								if len(splitted) > 1 {
-									field.handler, weight = parseHandler(splitted[1])
-								}
-								if len(splitted) > 2 {
-									field.iterator, weight = parseHandler(splitted[2])
-								}
-								if len(splitted) > 3 {
-									field.cachelessResolution = splitted[3] == "cacheless_resolution"
+								fieldGroups := strings.Split(tag.Value(), ";")
+								for _, fieldGroup := range fieldGroups {
+									splitted := strings.SplitN(fieldGroup, ",", 4)
+									alias := splitted[0]
+									if alias == "-" {
+										continue FIELD
+									}
+									field := seclField{name: alias}
+									if len(splitted) > 1 {
+										field.handler, weight = parseHandler(splitted[1])
+									}
+									if len(splitted) > 2 {
+										field.iterator, weight = parseHandler(splitted[2])
+									}
+									if len(splitted) > 3 {
+										field.cachelessResolution = splitted[3] == "cacheless_resolution"
+									}
+
+									fields = append(fields, field)
 								}
 
-								fields = append(fields, field)
 							case "op_override":
 								opOverrides = tag.Value()
 							}
@@ -448,11 +454,6 @@ var funcMap = map[string]interface{}{
 var accessorsTemplateCode string
 
 func main() {
-	var err error
-	tmpl := template.Must(template.New("header").Funcs(funcMap).Parse(accessorsTemplateCode))
-
-	os.Remove(output)
-
 	module, err := parseFile(filename, pkgname)
 	if err != nil {
 		panic(err)
@@ -465,32 +466,61 @@ func main() {
 	}
 
 	if docOutput != "" {
+		os.Remove(docOutput)
 		if err := doc.GenerateDocJSON(module, docOutput); err != nil {
 			panic(err)
 		}
 	}
 
-	tmpfile, err := os.CreateTemp(path.Dir(output), "accessors")
-	if err != nil {
-		log.Fatal(err)
+	os.Remove(output)
+	if err := generateContent(output, module); err != nil {
+		panic(err)
+	}
+}
+
+func generateContent(output string, module *common.Module) error {
+	tmpl := template.Must(template.New("header").Funcs(funcMap).Parse(accessorsTemplateCode))
+
+	buffer := bytes.Buffer{}
+	if err := tmpl.Execute(&buffer, module); err != nil {
+		return err
 	}
 
-	if err := tmpl.Execute(tmpfile, module); err != nil {
-		panic(err)
+	cleaned := removeEmptyLines(&buffer)
+
+	tmpfile, err := os.CreateTemp(path.Dir(output), "accessors")
+	if err != nil {
+		return err
+	}
+
+	if _, err := tmpfile.WriteString(cleaned); err != nil {
+		return err
 	}
 
 	if err := tmpfile.Close(); err != nil {
-		panic(err)
+		return err
 	}
 
 	cmd := exec.Command("gofmt", "-s", "-w", tmpfile.Name())
-	if err := cmd.Run(); err != nil {
-		panic(err)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Fatal(string(output))
+		return err
 	}
 
-	if err := os.Rename(tmpfile.Name(), output); err != nil {
-		panic(err)
+	return os.Rename(tmpfile.Name(), output)
+}
+
+func removeEmptyLines(input *bytes.Buffer) string {
+	scanner := bufio.NewScanner(input)
+	builder := strings.Builder{}
+	for scanner.Scan() {
+		trimmed := strings.TrimSpace(scanner.Text())
+		if len(trimmed) != 0 {
+			builder.WriteString(trimmed)
+			builder.WriteRune('\n')
+		}
 	}
+	return builder.String()
 }
 
 func init() {
