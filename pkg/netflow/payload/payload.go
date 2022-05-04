@@ -42,8 +42,8 @@ type FlowPayload struct {
 	IPProtocol   uint32           `json:"ip_protocol"`
 	Tos          uint32           `json:"tos"`
 	Exporter     Exporter         `json:"exporter"`
-	Source       Endpoint         `json:"flow_source"`
-	Destination  Endpoint         `json:"flow_destination"`
+	Source       Endpoint         `json:"source"`
+	Destination  Endpoint         `json:"destination"`
 	Ingress      ObservationPoint `json:"ingress"`
 	Egress       ObservationPoint `json:"egress"`
 	// TODO: Tags
