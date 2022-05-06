@@ -42,9 +42,18 @@ type Flow struct {
 	InputInterface  uint32 `json:"input_interface"` // FLOW KEY
 	OutputInterface uint32 `json:"output_interface"`
 
-	// Ethernet information
+	// Mac Address
+	SrcMac uint64 `json:"src_mac"`
+	DstMac uint64 `json:"dst_mac"`
 
+	// Mask
+	SrcMask uint32 `json:"src_mask"`
+	DstMask uint32 `json:"dst_mask"`
+
+	// Ethernet information
 	Tos uint32 `json:"tos"` // FLOW KEY
+
+	NextHop string `json:"next_hop"` // FLOW KEY
 }
 
 // AggregationHash return a hash used as aggregation key

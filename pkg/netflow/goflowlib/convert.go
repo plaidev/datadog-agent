@@ -22,6 +22,10 @@ func ConvertFlow(srcFlow *flowpb.FlowMessage) *common.Flow {
 		Packets:           srcFlow.Packets,
 		SrcAddr:           net.IP(srcFlow.SrcAddr).String(),
 		DstAddr:           net.IP(srcFlow.DstAddr).String(),
+		SrcMac:            srcFlow.SrcMac,
+		DstMac:            srcFlow.DstMac,
+		SrcMask:           srcFlow.SrcNet,
+		DstMask:           srcFlow.DstNet,
 		EtherType:         srcFlow.Etype,
 		IPProtocol:        srcFlow.Proto,
 		SrcPort:           srcFlow.SrcPort,
@@ -29,6 +33,7 @@ func ConvertFlow(srcFlow *flowpb.FlowMessage) *common.Flow {
 		InputInterface:    srcFlow.InIf,
 		OutputInterface:   srcFlow.OutIf,
 		Tos:               srcFlow.IPTos,
+		NextHop:           net.IP(srcFlow.NextHop).String(),
 	}
 }
 

@@ -14,8 +14,13 @@ type Exporter struct {
 type Endpoint struct {
 	IP   string `json:"ip"`
 	Port uint32 `json:"port"`
-	// TODO: mac address
-	// TODO: mask
+	Mac  string `json:"mac"`
+	Mask string `json:"mask"`
+}
+
+// NextHop contains next hop details
+type NextHop struct {
+	IP string `json:"ip"`
 }
 
 // Interface contains interface details
@@ -46,7 +51,8 @@ type FlowPayload struct {
 	Destination  Endpoint         `json:"destination"`
 	Ingress      ObservationPoint `json:"ingress"`
 	Egress       ObservationPoint `json:"egress"`
-	// TODO: Tags
-	// TODO: tcp_flags
-	// TODO: next_hop IP
+	Namespace    string           `json:"namespace"`
+	Host         string           `json:"host"`
+	TcpFlags     []string         `json:"tcp_flags"`
+	NextHop      NextHop          `json:"next_hop"`
 }
