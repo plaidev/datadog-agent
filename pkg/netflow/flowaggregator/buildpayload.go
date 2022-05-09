@@ -67,7 +67,7 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		Namespace: namespace,
 		Host:      hostname,
 		// TODO: implement tcp_flags
-		TcpFlags: []string{"SYN", "ACK"},
+		TCPFlags: []string{"SYN", "ACK"},
 		NextHop: payload.NextHop{
 			IP: aggFlow.NextHop,
 		},

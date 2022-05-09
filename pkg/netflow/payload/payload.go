@@ -53,6 +53,6 @@ type FlowPayload struct {
 	Egress       ObservationPoint `json:"egress"`
 	Namespace    string           `json:"namespace"`
 	Host         string           `json:"host"`
-	TcpFlags     []string         `json:"tcp_flags"`
+	TCPFlags     []string         `json:"tcp_flags"`
 	NextHop      NextHop          `json:"next_hop"`
 }
