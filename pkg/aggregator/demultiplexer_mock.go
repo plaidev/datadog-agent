@@ -17,7 +17,8 @@ import (
 // the samples that the TimeSamplers should have received.
 type TestAgentDemultiplexer struct {
 	*AgentDemultiplexer
-	receivedSamples []metrics.MetricSample
+	receivedSamples   []metrics.MetricSample
+	mockDefaultSender Sender
 	sync.Mutex
 }
 
@@ -79,6 +80,19 @@ func (a *TestAgentDemultiplexer) Reset() {
 	a.Lock()
 	a.receivedSamples = a.receivedSamples[0:0]
 	a.Unlock()
+}
+
+// GetDefaultSender get default sender
+func (a *TestAgentDemultiplexer) GetDefaultSender() (Sender, error) {
+	if a.mockDefaultSender != nil {
+		return a.mockDefaultSender, nil
+	}
+	return a.GetDefaultSender()
+}
+
+// SetMockDefaultSender sets mock default sender
+func (a *TestAgentDemultiplexer) SetMockDefaultSender(sender Sender) {
+	a.mockDefaultSender = sender
 }
 
 // InitTestAgentDemultiplexerWithFlushInterval inits a TestAgentDemultiplexer with the given flush interval.
