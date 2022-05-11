@@ -1,12 +1,15 @@
 package netflow
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/DataDog/datadog-agent/pkg/aggregator"
 	"github.com/DataDog/datadog-agent/pkg/aggregator/mocksender"
 	"github.com/DataDog/datadog-agent/pkg/config"
+	"github.com/DataDog/datadog-agent/pkg/util/log"
+	"github.com/cihub/seelog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -64,7 +67,7 @@ network_devices:
 	server, err := NewNetflowServer(demux)
 	require.NoError(t, err, "cannot start Netflow Server")
 	assert.NotNil(t, server)
-	defer server.Stop()
+	defer server.stop()
 
 	// Send netflowV5Data twice to test aggregator
 	// Flows will have 2x bytes/packets after aggregation
@@ -130,4 +133,66 @@ network_devices:
 
 	sender.AssertEventPlatformEvent(t, compactEvent.String(), "network-devices-netflow")
 	sender.AssertMetric(t, "Count", "datadog.newflow.aggregator.flows_received", 1, "", []string{"sample_addr:127.0.0.1", "flow_type:netflow5"})
+}
+
+func TestStartServerAndStopServer(t *testing.T) {
+	demux := aggregator.InitTestAgentDemultiplexerWithFlushInterval(10 * time.Millisecond)
+	defer demux.Stop(false)
+	err := StartServer(demux)
+	require.NoError(t, err)
+	require.NotNil(t, serverInstance)
+
+	StopServer()
+	require.Nil(t, serverInstance)
+}
+
+func TestIsEnabled(t *testing.T) {
+	saved := config.Datadog.Get("network_devices.netflow.enabled")
+	defer config.Datadog.Set("network_devices.netflow.enabled", saved)
+
+	config.Datadog.Set("network_devices.netflow.enabled", true)
+	assert.Equal(t, true, IsEnabled())
+
+	config.Datadog.Set("network_devices.netflow.enabled", false)
+	assert.Equal(t, false, IsEnabled())
+}
+
+func TestServer_Stop(t *testing.T) {
+	var b bytes.Buffer
+	w := bufio.NewWriter(&b)
+	l, err := seelog.LoggerFromWriterWithMinLevelAndFormat(w, seelog.DebugLvl, "[%LEVEL] %FuncShort: %Msg")
+	assert.Nil(t, err)
+	log.SetupLogger(l, "debug")
+
+	port := getFreePort()
+
+	// collect_device_metadata: false
+	config.Datadog.SetConfigType("yaml")
+	err = config.Datadog.ReadConfig(strings.NewReader(fmt.Sprintf(`
+network_devices:
+  netflow:
+    enabled: true
+    aggregator_flush_interval: 1
+    listeners:
+      - flow_type: netflow5 # netflow, sflow, ipfix
+        bind_host: 0.0.0.0
+        port: %d # default 2055 for netflow
+`, port)))
+	require.NoError(t, err)
+
+	demux := aggregator.InitTestAgentDemultiplexerWithFlushInterval(10 * time.Millisecond)
+	defer demux.Stop(false)
+	server, err := NewNetflowServer(demux)
+	require.NoError(t, err, "cannot start Netflow Server")
+	assert.NotNil(t, server)
+
+	server.stop()
+
+	w.Flush()
+	logs := b.String()
+
+	assert.Equal(t, strings.Count(logs, "[INFO] stop: Stop NetFlow Server"), 1, logs)
+	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` shutting down", port)), 1, logs)
+	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` stopped", port)), 1, logs)
+	// TODO: more stop assertions
 }

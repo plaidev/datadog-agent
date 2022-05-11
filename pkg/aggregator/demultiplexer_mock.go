@@ -87,7 +87,7 @@ func (a *TestAgentDemultiplexer) GetDefaultSender() (Sender, error) {
 	if a.mockDefaultSender != nil {
 		return a.mockDefaultSender, nil
 	}
-	return a.GetDefaultSender()
+	return a.AgentDemultiplexer.GetDefaultSender()
 }
 
 // SetMockDefaultSender sets mock default sender

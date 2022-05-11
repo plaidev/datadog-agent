@@ -63,25 +63,25 @@ func NewNetflowServer(demultiplexer aggregator.Demultiplexer) (*Server, error) {
 }
 
 // Stop stops the Server.
-func (s *Server) Stop() {
+func (s *Server) stop() {
 	log.Infof("Stop NetFlow Server")
 
 	s.flowAgg.Stop()
 
 	for _, listener := range s.listeners {
-		log.Infof("Stop listening on %s", listener.config.Addr())
 		stopped := make(chan interface{})
 
 		go func() {
-			log.Infof("Stop listening on %s", listener.config.Addr())
+			log.Infof("Listener `%s` shutting down", listener.config.Addr())
 			listener.shutdown()
 			close(stopped)
 		}()
 
 		select {
 		case <-stopped:
+			log.Infof("Listener `%s` stopped", listener.config.Addr())
 		case <-time.After(time.Duration(s.config.StopTimeout) * time.Second):
-			log.Errorf("Stopping server. Timeout after %d seconds", s.config.StopTimeout)
+			log.Errorf("Stopping listener `%s`. Timeout after %d seconds", listener.config.Addr(), s.config.StopTimeout)
 		}
 	}
 }
@@ -96,7 +96,7 @@ func StartServer(demultiplexer aggregator.Demultiplexer) error {
 // StopServer stops the netflow server, if it is running.
 func StopServer() {
 	if serverInstance != nil {
-		serverInstance.Stop()
+		serverInstance.stop()
 		serverInstance = nil
 	}
 }
