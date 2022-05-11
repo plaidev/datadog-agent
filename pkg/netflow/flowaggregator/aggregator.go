@@ -94,17 +94,18 @@ func (agg *FlowAggregator) flushLoop() {
 		case <-agg.stopChan:
 			return
 		// automatic flush sequence
-		case t := <-flushTicker:
-			agg.flush(t)
+		case <-flushTicker:
+			agg.Flush()
 		}
 	}
 }
 
-func (agg *FlowAggregator) flush(flushTime time.Time) {
+// Flush flushes the aggregator
+func (agg *FlowAggregator) Flush() int {
 	flows := agg.flowStore.flush()
 	log.Debugf("Flushing %d flows to the forwarder", len(flows))
 	if len(flows) == 0 {
-		return
+		return 0
 	}
 	// TODO: Add flush count telemetry e.g. aggregator newFlushCountStats()
 
@@ -116,4 +117,5 @@ func (agg *FlowAggregator) flush(flushTime time.Time) {
 		}
 	}
 	agg.sendFlows(flows)
+	return len(flows)
 }

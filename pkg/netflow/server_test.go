@@ -2,6 +2,7 @@ package netflow
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/DataDog/datadog-agent/pkg/aggregator"
 	"github.com/DataDog/datadog-agent/pkg/aggregator/mocksender"
@@ -28,11 +29,6 @@ func getFreePort() uint16 {
 		if err != nil {
 			continue
 		}
-		//listener, err := startSNMPTrapListener(&Config{Port: port}, nil)
-		//if err != nil {
-		//	continue
-		//}
-		//listener.Close()
 		return port
 	}
 	panic("unable to find free port for starting the trap listener")
@@ -74,8 +70,6 @@ func TestNewNetflowServer(t *testing.T) {
 		0x00, 0x82, 0x9b, 0x90, 0x00, 0x82, 0x9b, 0x9d, 0x1f, 0x90, 0xb9, 0x1a, 0x00, 0x1b, 0x06, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	}
-	buf := bytes.NewBuffer(data)
-
 	port := getFreePort()
 
 	// collect_device_metadata: false
@@ -101,6 +95,7 @@ network_devices:
 	sender.On("Count", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 
 	demux.SetMockDefaultSender(sender)
+	demux.SetMockDefaultSender(sender)
 
 	server, err := NewNetflowServer(demux)
 	require.NoError(t, err, "cannot start Netflow Server")
@@ -112,73 +107,69 @@ network_devices:
 		fmt.Printf("Some error %v", err)
 		return
 	}
-	count, err := conn.Write(data)
+	_, err = conn.Write(data)
 	require.NoError(t, err)
-	fmt.Println("bytes count: ", count)
-	//fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
-	//_, err = bufio.NewReader(conn).Read(data)
-	//if err == nil {
-	//	fmt.Printf("%s\n", data)
-	//} else {
-	//	fmt.Printf("Some error %v\n", err)
-	//}
 
-	// language=json
-	//	event := []byte(`
-	//{
-	//    "bytes": 194,
-	//    "destination": {
-	//        "ip": "10.128.2.119",
-	//        "mac": "",
-	//        "mask": "",
-	//        "port": 8080
-	//    },
-	//    "direction": "ingress",
-	//    "egress": {
-	//        "interface": {
-	//            "index": 7
-	//        }
-	//    },
-	//    "end": 1540209169,
-	//    "ether_type": 2048,
-	//    "exporter": {
-	//        "ip": "127.0.0.1"
-	//    },
-	//    "host": "COMP-C02CF0CWLVDP",
-	//    "ingress": {
-	//        "interface": {
-	//            "index": 1
-	//        }
-	//    },
-	//    "ip_protocol": 6,
-	//    "namespace": "default",
-	//    "next_hop": {
-	//        "ip": "0.0.0.0"
-	//    },
-	//    "packets": 3,
-	//    "sampling_rate": 0,
-	//    "source": {
-	//        "ip": "10.129.2.1",
-	//        "mac": "00:00:00:00:00:00",
-	//        "mask": "0.0.0.0/24",
-	//        "port": 49452
-	//    },
-	//    "start": 1540209168,
-	//    "tcp_flags": [
-	//        "SYN",
-	//        "ACK"
-	//    ],
-	//    "tos": 0,
-	//    "type": "netflow5"
-	//}`)
+	_, err = conn.Write(data)
+	require.NoError(t, err)
 
-	time.Sleep(2 * time.Second)
-	sender.AssertEventPlatformEvent(t, "abc", "network-devices-metadata")
+	// language = json
+	event := []byte(`
+{
+  "type": "netflow5",
+  "sampling_rate": 0,
+  "direction": "ingress",
+  "start": 1540209168,
+  "end": 1540209169,
+  "bytes": 388,
+  "packets": 6,
+  "ether_type": 2048,
+  "ip_protocol": 6,
+  "tos": 0,
+  "exporter": {
+    "ip": "127.0.0.1"
+  },
+  "source": {
+    "ip": "10.129.2.1",
+    "port": 49452,
+    "mac": "00:00:00:00:00:00",
+    "mask": "0.0.0.0/24"
+  },
+  "destination": {
+    "ip": "10.128.2.119",
+    "port": 8080,
+    "mac": "",
+    "mask": ""
+  },
+  "ingress": {
+    "interface": {
+      "index": 1
+    }
+  },
+  "egress": {
+    "interface": {
+      "index": 7
+    }
+  },
+  "namespace": "default",
+  "host": "COMP-C02CF0CWLVDP",
+  "tcp_flags": [
+    "SYN",
+    "ACK"
+  ],
+  "next_hop": {
+    "ip": "0.0.0.0"
+  }
+}
+`)
+	compactEvent := new(bytes.Buffer)
+	err = json.Compact(compactEvent, event)
+	assert.NoError(t, err)
+
+	waitFlowsToBeFlushed(server.flowAgg, 3*time.Second)
+
+	sender.AssertEventPlatformEvent(t, compactEvent.String(), "network-devices-netflow")
 
 	conn.Close()
-
 	server.Stop()
-
-	fmt.Println(port)
-	fmt.Println(buf)
 }
