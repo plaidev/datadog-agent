@@ -2,6 +2,8 @@ package netflow
 
 import (
 	"github.com/DataDog/datadog-agent/pkg/netflow/flowaggregator"
+	"net"
+	"strconv"
 	"time"
 )
 
@@ -26,4 +28,34 @@ func waitFlowsToBeFlushed(flowAgg *flowaggregator.FlowAggregator, timeout time.D
 			return 0
 		}
 	}
+}
+
+func getFreePort() uint16 {
+	var port uint16
+	for i := 0; i < 5; i++ {
+		conn, err := net.ListenPacket("udp", ":0")
+		if err != nil {
+			continue
+		}
+		conn.Close()
+		port, err = parsePort(conn.LocalAddr().String())
+		if err != nil {
+			continue
+		}
+		return port
+	}
+	panic("unable to find free port for starting the trap listener")
+}
+
+func parsePort(addr string) (uint16, error) {
+	_, portString, err := net.SplitHostPort(addr)
+	if err != nil {
+		return 0, err
+	}
+
+	port, err := strconv.ParseUint(portString, 10, 16)
+	if err != nil {
+		return 0, err
+	}
+	return uint16(port), nil
 }

@@ -11,41 +11,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
 )
-
-func getFreePort() uint16 {
-	var port uint16
-	for i := 0; i < 5; i++ {
-		conn, err := net.ListenPacket("udp", ":0")
-		if err != nil {
-			continue
-		}
-		conn.Close()
-		port, err = parsePort(conn.LocalAddr().String())
-		if err != nil {
-			continue
-		}
-		return port
-	}
-	panic("unable to find free port for starting the trap listener")
-}
-
-func parsePort(addr string) (uint16, error) {
-	_, portString, err := net.SplitHostPort(addr)
-	if err != nil {
-		return 0, err
-	}
-
-	port, err := strconv.ParseUint(portString, 10, 16)
-	if err != nil {
-		return 0, err
-	}
-	return uint16(port), nil
-}
 
 func TestNewNetflowServer(t *testing.T) {
 	data := []byte{
@@ -86,31 +55,23 @@ network_devices:
 `, port)))
 	require.NoError(t, err)
 
-	// TODO: Add server tests
 	demux := aggregator.InitTestAgentDemultiplexerWithFlushInterval(10 * time.Millisecond)
 	defer demux.Stop(false)
-
 	sender := mocksender.NewMockSender("")
 	sender.On("EventPlatformEvent", mock.Anything, mock.Anything).Return()
 	sender.On("Count", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
-
-	demux.SetMockDefaultSender(sender)
 	demux.SetMockDefaultSender(sender)
 
 	server, err := NewNetflowServer(demux)
 	require.NoError(t, err, "cannot start Netflow Server")
 	assert.NotNil(t, server)
+	defer server.Stop()
 
-	//p := make([]byte, 2048)
-	conn, err := net.Dial("udp", fmt.Sprintf("0.0.0.0:%d", port))
-	if err != nil {
-		fmt.Printf("Some error %v", err)
-		return
-	}
-	_, err = conn.Write(data)
+	// Send data twice to test aggregator
+	// Flows will have 2x bytes/packets after aggregation
+	err = sendUDPPacket(port, data)
 	require.NoError(t, err)
-
-	_, err = conn.Write(data)
+	err = sendUDPPacket(port, data)
 	require.NoError(t, err)
 
 	// language = json
@@ -166,10 +127,18 @@ network_devices:
 	err = json.Compact(compactEvent, event)
 	assert.NoError(t, err)
 
-	waitFlowsToBeFlushed(server.flowAgg, 3*time.Second)
+	waitFlowsToBeFlushed(server.flowAgg, 5*time.Second)
 
 	sender.AssertEventPlatformEvent(t, compactEvent.String(), "network-devices-netflow")
+	sender.AssertMetric(t, "Count", "datadog.newflow.aggregator.flows_received", 1, "", []string{"sample_addr:127.0.0.1", "flow_type:netflow5"})
+}
 
-	conn.Close()
-	server.Stop()
+func sendUDPPacket(port uint16, data []byte) error {
+	udpConn, err := net.Dial("udp", fmt.Sprintf("0.0.0.0:%d", port))
+	if err != nil {
+		return err
+	}
+	_, err = udpConn.Write(data)
+	udpConn.Close()
+	return err
 }
