@@ -10,14 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"net"
 	"strings"
 	"testing"
 	"time"
 )
 
 func TestNewNetflowServer(t *testing.T) {
-	data := []byte{
+	netflowV5Data := []byte{
 		0x00, 0x05, 0x00, 0x06, 0x00, 0x82, 0xc3, 0x48, 0x5b, 0xcd, 0xba, 0x1b, 0x05, 0x97, 0x6d, 0xc7,
 		0x00, 0x00, 0x64, 0x3d, 0x08, 0x08, 0x00, 0x00, 0x0a, 0x80, 0x02, 0x79, 0x0a, 0x80, 0x02, 0x01,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00, 0x02, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x02, 0x4e,
@@ -67,11 +66,11 @@ network_devices:
 	assert.NotNil(t, server)
 	defer server.Stop()
 
-	// Send data twice to test aggregator
+	// Send netflowV5Data twice to test aggregator
 	// Flows will have 2x bytes/packets after aggregation
-	err = sendUDPPacket(port, data)
+	err = sendUDPPacket(port, netflowV5Data)
 	require.NoError(t, err)
-	err = sendUDPPacket(port, data)
+	err = sendUDPPacket(port, netflowV5Data)
 	require.NoError(t, err)
 
 	waitFlowsToBeFlushed(server.flowAgg, 10*time.Second)
@@ -131,14 +130,4 @@ network_devices:
 
 	sender.AssertEventPlatformEvent(t, compactEvent.String(), "network-devices-netflow")
 	sender.AssertMetric(t, "Count", "datadog.newflow.aggregator.flows_received", 1, "", []string{"sample_addr:127.0.0.1", "flow_type:netflow5"})
-}
-
-func sendUDPPacket(port uint16, data []byte) error {
-	udpConn, err := net.Dial("udp", fmt.Sprintf("0.0.0.0:%d", port))
-	if err != nil {
-		return err
-	}
-	_, err = udpConn.Write(data)
-	udpConn.Close()
-	return err
 }

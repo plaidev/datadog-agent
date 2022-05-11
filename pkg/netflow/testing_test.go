@@ -1,6 +1,7 @@
 package netflow
 
 import (
+	"fmt"
 	"github.com/DataDog/datadog-agent/pkg/netflow/flowaggregator"
 	"net"
 	"strconv"
@@ -58,4 +59,14 @@ func parsePort(addr string) (uint16, error) {
 		return 0, err
 	}
 	return uint16(port), nil
+}
+
+func sendUDPPacket(port uint16, data []byte) error {
+	udpConn, err := net.Dial("udp", fmt.Sprintf("0.0.0.0:%d", port))
+	if err != nil {
+		return err
+	}
+	_, err = udpConn.Write(data)
+	udpConn.Close()
+	return err
 }
