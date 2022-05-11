@@ -74,6 +74,8 @@ network_devices:
 	err = sendUDPPacket(port, data)
 	require.NoError(t, err)
 
+	waitFlowsToBeFlushed(server.flowAgg, 10*time.Second)
+
 	// language = json
 	event := []byte(`
 {
@@ -126,8 +128,6 @@ network_devices:
 	compactEvent := new(bytes.Buffer)
 	err = json.Compact(compactEvent, event)
 	assert.NoError(t, err)
-
-	waitFlowsToBeFlushed(server.flowAgg, 5*time.Second)
 
 	sender.AssertEventPlatformEvent(t, compactEvent.String(), "network-devices-netflow")
 	sender.AssertMetric(t, "Count", "datadog.newflow.aggregator.flows_received", 1, "", []string{"sample_addr:127.0.0.1", "flow_type:netflow5"})
