@@ -19,6 +19,8 @@ import (
 )
 
 func TestNewNetflowServer(t *testing.T) {
+	// NetFlow5 example data from goflow repo:
+	// https://github.com/netsampler/goflow2/blob/5300494e478567a0fb9b8de0c504d9442260d0ad/decoders/netflowlegacy/netflow_test.go#L11-L32
 	netflowV5Data := []byte{
 		0x00, 0x05, 0x00, 0x06, 0x00, 0x82, 0xc3, 0x48, 0x5b, 0xcd, 0xba, 0x1b, 0x05, 0x97, 0x6d, 0xc7,
 		0x00, 0x00, 0x64, 0x3d, 0x08, 0x08, 0x00, 0x00, 0x0a, 0x80, 0x02, 0x79, 0x0a, 0x80, 0x02, 0x01,
@@ -41,8 +43,9 @@ func TestNewNetflowServer(t *testing.T) {
 		0x00, 0x82, 0x9b, 0x90, 0x00, 0x82, 0x9b, 0x9d, 0x1f, 0x90, 0xb9, 0x1a, 0x00, 0x1b, 0x06, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	}
-	port := getFreePort()
 
+	// Setup NetFlow feature config
+	port := getFreePort()
 	config.Datadog.SetConfigType("yaml")
 	err := config.Datadog.MergeConfigOverride(strings.NewReader(fmt.Sprintf(`
 network_devices:
@@ -56,6 +59,7 @@ network_devices:
 `, port)))
 	require.NoError(t, err)
 
+	// Setup NetFlow Server
 	demux := aggregator.InitTestAgentDemultiplexerWithFlushInterval(10 * time.Millisecond)
 	defer demux.Stop(false)
 	sender := mocksender.NewMockSender("")
@@ -75,7 +79,10 @@ network_devices:
 	err = sendUDPPacket(port, netflowV5Data)
 	require.NoError(t, err)
 
+	// Make sure flows are flushed before doing assertions
 	waitFlowsToBeFlushed(server.flowAgg, 10*time.Second)
+
+	// Assertions
 
 	// language = json
 	event := []byte(`
