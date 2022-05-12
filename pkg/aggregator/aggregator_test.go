@@ -530,7 +530,7 @@ func TestTags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			defer config.Datadog.Set("basic_telemetry_add_container_tags", nil)
+			defer config.Datadog.Unset("basic_telemetry_add_container_tags")
 			config.Datadog.Set("basic_telemetry_add_container_tags", tt.tlmContainerTagsEnabled)
 			agg := NewBufferedAggregator(nil, nil, "hostname", time.Second)
 			agg.agentTags = tt.agentTags
@@ -565,11 +565,9 @@ type MockSerializerIterableSerie struct {
 	serializer.MockSerializer
 }
 
-func (s *MockSerializerIterableSerie) SendIterableSeries(iterableSerie *metrics.IterableSeries) error {
-	defer iterableSerie.IterationStopped()
-
-	for iterableSerie.MoveNext() {
-		s.series = append(s.series, iterableSerie.Current())
+func (s *MockSerializerIterableSerie) SendIterableSeries(seriesSource metrics.SerieSource) error {
+	for seriesSource.MoveNext() {
+		s.series = append(s.series, seriesSource.Current())
 	}
 	return nil
 }

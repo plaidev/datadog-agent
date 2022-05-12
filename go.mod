@@ -46,9 +46,6 @@ replace (
 	github.com/DataDog/datadog-agent/pkg/remoteconfig/client => ./pkg/remoteconfig/client
 	github.com/DataDog/datadog-agent/pkg/security/secl => ./pkg/security/secl
 	github.com/DataDog/datadog-agent/pkg/trace => ./pkg/trace
-	github.com/DataDog/datadog-agent/pkg/util/log => ./pkg/util/log
-	github.com/DataDog/datadog-agent/pkg/util/scrubber => ./pkg/util/scrubber
-	github.com/DataDog/datadog-agent/pkg/util/winutil => ./pkg/util/winutil
 )
 
 require (
@@ -63,17 +60,14 @@ require (
 	github.com/DataDog/datadog-agent/pkg/remoteconfig/client v0.36.0-rc.4
 	github.com/DataDog/datadog-agent/pkg/security/secl v0.36.0-rc.4
 	github.com/DataDog/datadog-agent/pkg/trace v0.36.0-rc.4
-	github.com/DataDog/datadog-agent/pkg/util/log v0.36.0-rc.4
-	github.com/DataDog/datadog-agent/pkg/util/scrubber v0.36.0-rc.4
-	github.com/DataDog/datadog-agent/pkg/util/winutil v0.36.0-rc.4
-	github.com/DataDog/datadog-go/v5 v5.1.0
+	github.com/DataDog/datadog-go/v5 v5.1.1
 	github.com/DataDog/datadog-operator v0.5.0-rc.2.0.20210402083916-25ba9a22e67a
 	github.com/DataDog/ebpf-manager v0.0.0-20220406140358-68e6b7f54dde
 	github.com/DataDog/gohai v0.0.0-20220329101230-3b6a804fdd24
 	github.com/DataDog/gopsutil v0.0.0-20220308095538-d086941833e3
 	github.com/DataDog/nikos v1.7.6
 	github.com/DataDog/sketches-go v1.4.1
-	github.com/DataDog/viper v1.9.0
+	github.com/DataDog/viper v1.10.0
 	github.com/DataDog/watermarkpodautoscaler v0.3.1-logs-attributes.2.0.20211014120627-6d6a5c559fc9
 	github.com/DataDog/zstd v1.5.0
 	github.com/DataDog/zstd_0 v0.0.0-20210310093942-586c1286621f
@@ -107,7 +101,7 @@ require (
 	github.com/cri-o/ocicni v0.2.0
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/davecgh/go-spew v1.1.1
-	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
+	github.com/docker/docker v20.10.14+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/libnetwork v0.5.6
 	github.com/dustin/go-humanize v1.0.0
@@ -123,7 +117,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/gopacket v1.1.19
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1
@@ -164,7 +158,7 @@ require (
 	github.com/richardartoul/molecule v0.0.0-20210914193524-25d8911bb85b
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
-	github.com/shirou/gopsutil/v3 v3.22.3
+	github.com/shirou/gopsutil/v3 v3.22.4
 	github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4
 	github.com/skydive-project/go-debouncer v1.0.0
 	github.com/spf13/afero v1.8.2
@@ -172,7 +166,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.1
 	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
-	github.com/theupdateframework/go-tuf v0.1.0
+	github.com/theupdateframework/go-tuf v0.3.0
 	github.com/tinylib/msgp v1.1.6
 	github.com/twmb/murmur3 v1.1.6
 	github.com/urfave/negroni v1.0.0
@@ -332,8 +326,8 @@ require (
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/opencontainers/runc v1.0.2 // indirect
+	github.com/opencontainers/image-spec v1.0.2
+	github.com/opencontainers/runc v1.0.3 // indirect
 	github.com/opencontainers/selinux v1.9.1 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
@@ -444,3 +438,5 @@ replace (
 	github.com/go-logr/logr/funcr => ./internal/patch/logr/funcr
 	github.com/go-logr/stdr => github.com/go-logr/stdr v0.4.0
 )
+
+replace github.com/vishvananda/netlink => github.com/DataDog/netlink v1.0.1-0.20220504230202-f7323aba1f6c

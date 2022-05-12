@@ -266,7 +266,6 @@ func InitConfig(config Config) {
 	config.BindEnvAndSetDefault("syslog_tls_verify", true)
 	config.BindEnvAndSetDefault("cmd_host", "localhost")
 	config.BindEnvAndSetDefault("cmd_port", 5001)
-	config.BindEnvAndSetDefault("cluster_agent.cmd_port", 5005)
 	config.BindEnvAndSetDefault("default_integration_http_timeout", 9)
 	config.BindEnvAndSetDefault("integration_tracing", false)
 	config.BindEnvAndSetDefault("enable_metadata_collection", true)
@@ -635,6 +634,7 @@ func InitConfig(config Config) {
 	config.SetKnown("snmp_listener.min_collection_interval")
 	config.SetKnown("snmp_listener.namespace")
 
+	bindEnvAndSetLogsConfigKeys(config, "network_devices.snmp_traps.forwarder.")
 	config.BindEnvAndSetDefault("network_devices.snmp_traps.enabled", false)
 	config.BindEnvAndSetDefault("network_devices.snmp_traps.port", 9162)
 	config.BindEnvAndSetDefault("network_devices.snmp_traps.community_strings", []string{})
@@ -658,6 +658,7 @@ func InitConfig(config Config) {
 
 	// Datadog cluster agent
 	config.BindEnvAndSetDefault("cluster_agent.enabled", false)
+	config.BindEnvAndSetDefault("cluster_agent.cmd_port", 5005)
 	config.BindEnvAndSetDefault("cluster_agent.allow_legacy_tls", false)
 	config.BindEnvAndSetDefault("cluster_agent.auth_token", "")
 	config.BindEnvAndSetDefault("cluster_agent.url", "")
@@ -668,6 +669,9 @@ func InitConfig(config Config) {
 	config.BindEnvAndSetDefault("cluster_agent.server.idle_timeout_seconds", 60)
 	config.BindEnvAndSetDefault("cluster_agent.serve_nozzle_data", false)
 	config.BindEnvAndSetDefault("cluster_agent.advanced_tagging", false)
+	config.BindEnvAndSetDefault("cluster_agent.max_leader_connections", 500)
+	config.BindEnvAndSetDefault("cluster_agent.max_leader_idle_connections", 50)
+	config.BindEnvAndSetDefault("cluster_agent.client_reconnect_period_seconds", 1200)
 	config.BindEnvAndSetDefault("metrics_port", "5000")
 
 	// Metadata endpoints
@@ -825,7 +829,11 @@ func InitConfig(config Config) {
 	config.BindEnvAndSetDefault("logs_config.dev_mode_use_proto", true)
 	config.BindEnvAndSetDefault("logs_config.dd_url_443", "agent-443-intake.logs.datadoghq.com")
 	config.BindEnvAndSetDefault("logs_config.stop_grace_period", 30)
+	// maximum time that the unix tailer will hold a log file open after it has been rotated
 	config.BindEnvAndSetDefault("logs_config.close_timeout", 60)
+	// maximum time that the windows tailer will hold a log file open, while waiting for
+	// the downstream logs pipeline to be ready to accept more data
+	config.BindEnvAndSetDefault("logs_config.windows_open_file_timeout", 5)
 	config.BindEnvAndSetDefault("logs_config.auto_multi_line_detection", false)
 	config.BindEnvAndSetDefault("logs_config.auto_multi_line_extra_patterns", []string{})
 	// The following auto_multi_line settings are experimental and may change
@@ -846,6 +854,9 @@ func InitConfig(config Config) {
 	config.BindEnvAndSetDefault("logs_config.aggregation_timeout", 1000)
 	// Time in seconds
 	config.BindEnvAndSetDefault("logs_config.file_scan_period", 10.0)
+
+	// temporary feature flag until this becomes the only option
+	config.BindEnvAndSetDefault("logs_config.cca_in_ad", false)
 
 	// The cardinality of tags to send for checks and dogstatsd respectively.
 	// Choices are: low, orchestrator, high.
