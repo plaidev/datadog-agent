@@ -45,7 +45,7 @@ func TestNewNetflowServer(t *testing.T) {
 
 	// collect_device_metadata: false
 	config.Datadog.SetConfigType("yaml")
-	err := config.Datadog.ReadConfig(strings.NewReader(fmt.Sprintf(`
+	err := config.Datadog.MergeConfigOverride(strings.NewReader(fmt.Sprintf(`
 network_devices:
   netflow:
     enabled: true
@@ -165,10 +165,9 @@ func TestServer_Stop(t *testing.T) {
 	log.SetupLogger(l, "debug")
 
 	port := getFreePort()
-
 	// collect_device_metadata: false
 	config.Datadog.SetConfigType("yaml")
-	err = config.Datadog.ReadConfig(strings.NewReader(fmt.Sprintf(`
+	err = config.Datadog.MergeConfigOverride(strings.NewReader(fmt.Sprintf(`
 network_devices:
   netflow:
     enabled: true
@@ -191,8 +190,6 @@ network_devices:
 	w.Flush()
 	logs := b.String()
 
-	assert.Equal(t, strings.Count(logs, "[INFO] stop: Stop NetFlow Server"), 1, logs)
 	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` shutting down", port)), 1, logs)
 	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` stopped", port)), 1, logs)
-	// TODO: more stop assertions
 }
