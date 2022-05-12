@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/DataDog/datadog-agent/pkg/logs/message"
 	"github.com/DataDog/datadog-agent/pkg/metrics"
 )
 
@@ -32,6 +33,11 @@ func (a *TestAgentDemultiplexer) AddTimeSampleBatch(shard TimeSamplerID, samples
 // GetEventsAndServiceChecksChannels returneds underlying events and service checks channels.
 func (a *TestAgentDemultiplexer) GetEventsAndServiceChecksChannels() (chan []*metrics.Event, chan []*metrics.ServiceCheck) {
 	return a.aggregator.GetBufferedChannels()
+}
+
+// GetEventPlatformEventsChannels returns underlying event platform events
+func (a *TestAgentDemultiplexer) GetEventPlatformEventsChannels() map[string][]*message.Message {
+	return a.aggregator.GetEventPlatformEvents()
 }
 
 // AddTimeSample implements a noop timesampler, appending the sample in an internal slice.
@@ -75,6 +81,31 @@ func (a *TestAgentDemultiplexer) WaitForSamples(timeout time.Duration) []metrics
 	}
 }
 
+// WaitEventPlatformEvents returns the event platform events samples received by the demultiplexer.
+func (a *TestAgentDemultiplexer) WaitEventPlatformEvents(eventType string, minEvents int, timeout time.Duration) []*message.Message {
+	ticker := time.NewTicker(10 * time.Millisecond)
+	timeoutOn := time.Now().Add(timeout)
+	var savedEvents []*message.Message
+	for {
+		select {
+		case <-ticker.C:
+			allEvents := a.aggregator.GetEventPlatformEvents()
+			savedEvents = append(savedEvents, allEvents[eventType]...)
+			// this case could always take priority on the timeout case, we have to make sure
+			// we've not timeout
+			if time.Now().After(timeoutOn) {
+				return savedEvents
+			}
+
+			if len(savedEvents) > minEvents {
+				return savedEvents
+			}
+		case <-time.After(timeout):
+			return nil
+		}
+	}
+}
+
 // Reset resets the internal samples slice.
 func (a *TestAgentDemultiplexer) Reset() {
 	a.Lock()
@@ -100,6 +131,7 @@ func InitTestAgentDemultiplexerWithFlushInterval(flushInterval time.Duration) *T
 	opts := DefaultDemultiplexerOptions(nil)
 	opts.FlushInterval = flushInterval
 	opts.DontStartForwarders = true
+	opts.UseNoopEventPlatformForwarder = true
 	demux := InitAndStartAgentDemultiplexer(opts, "hostname")
 	testAgent := TestAgentDemultiplexer{
 		AgentDemultiplexer: demux,
