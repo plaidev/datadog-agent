@@ -2,6 +2,7 @@ package flowaggregator
 
 import (
 	"context"
+	"fmt"
 	coreconfig "github.com/DataDog/datadog-agent/pkg/config"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 
@@ -27,6 +28,9 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 
 	namespace := coreconfig.Datadog.GetString("network_devices.namespace")
 
+	ipProtocol := fmt.Sprintf("%d", aggFlow.IPProtocol)
+	etherType := fmt.Sprintf("%d", aggFlow.EtherType)
+
 	return payload.FlowPayload{
 		FlowType: string(aggFlow.FlowType),
 		//Timestamp:    aggFlow.ReceivedTimestamp,
@@ -39,8 +43,8 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		End:        aggFlow.EndTimestamp,
 		Bytes:      aggFlow.Bytes,
 		Packets:    aggFlow.Packets,
-		EtherType:  aggFlow.EtherType,
-		IPProtocol: aggFlow.IPProtocol,
+		EtherType:  etherType,
+		IPProtocol: ipProtocol,
 		Tos:        aggFlow.Tos,
 		Source: payload.Endpoint{
 			IP:   aggFlow.SrcAddr,

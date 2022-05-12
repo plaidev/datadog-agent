@@ -43,8 +43,8 @@ type FlowPayload struct {
 	End          uint64           `json:"end"`
 	Bytes        uint64           `json:"bytes"`
 	Packets      uint64           `json:"packets"`
-	EtherType    uint32           `json:"ether_type"`
-	IPProtocol   uint32           `json:"ip_protocol"`
+	EtherType    string           `json:"ether_type"`
+	IPProtocol   string           `json:"ip_protocol"`
 	Tos          uint32           `json:"tos"`
 	Exporter     Exporter         `json:"exporter"`
 	Source       Endpoint         `json:"source"`
