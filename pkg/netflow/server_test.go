@@ -43,7 +43,6 @@ func TestNewNetflowServer(t *testing.T) {
 	}
 	port := getFreePort()
 
-	// collect_device_metadata: false
 	config.Datadog.SetConfigType("yaml")
 	err := config.Datadog.MergeConfigOverride(strings.NewReader(fmt.Sprintf(`
 network_devices:
@@ -158,14 +157,15 @@ func TestIsEnabled(t *testing.T) {
 }
 
 func TestServer_Stop(t *testing.T) {
+	// Setup logger to record logs
 	var b bytes.Buffer
 	w := bufio.NewWriter(&b)
 	l, err := seelog.LoggerFromWriterWithMinLevelAndFormat(w, seelog.DebugLvl, "[%LEVEL] %FuncShort: %Msg")
 	assert.Nil(t, err)
 	log.SetupLogger(l, "debug")
 
+	// Setup NetFlow config
 	port := getFreePort()
-	// collect_device_metadata: false
 	config.Datadog.SetConfigType("yaml")
 	err = config.Datadog.MergeConfigOverride(strings.NewReader(fmt.Sprintf(`
 network_devices:
@@ -179,17 +179,19 @@ network_devices:
 `, port)))
 	require.NoError(t, err)
 
+	// Setup Netflow Server
 	demux := aggregator.InitTestAgentDemultiplexerWithFlushInterval(10 * time.Millisecond)
 	defer demux.Stop(false)
 	server, err := NewNetflowServer(demux)
 	require.NoError(t, err, "cannot start Netflow Server")
 	assert.NotNil(t, server)
 
+	// Stops server
 	server.stop()
 
+	// Assert logs present
 	w.Flush()
 	logs := b.String()
-
 	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` shutting down", port)), 1, logs)
 	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` stopped", port)), 1, logs)
 }
