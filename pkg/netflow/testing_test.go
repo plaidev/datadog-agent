@@ -3,10 +3,28 @@ package netflow
 import (
 	"fmt"
 	"github.com/DataDog/datadog-agent/pkg/netflow/flowaggregator"
+	"github.com/netsampler/goflow2/utils"
+	"github.com/sirupsen/logrus"
 	"net"
 	"strconv"
 	"time"
 )
+
+type dummyFlowProcessor struct {
+	receivedMessages chan interface{}
+	stopped          bool
+}
+
+func (d *dummyFlowProcessor) FlowRoutine(workers int, addr string, port int, reuseport bool) error {
+	return utils.UDPStoppableRoutine(make(chan struct{}), "test_udp", func(msg interface{}) error {
+		d.receivedMessages <- msg
+		return nil
+	}, 3, addr, port, false, logrus.StandardLogger())
+}
+
+func (d *dummyFlowProcessor) Shutdown() {
+	d.stopped = true
+}
 
 func waitFlowsToBeFlushed(flowAgg *flowaggregator.FlowAggregator, timeout time.Duration) int {
 	ticker := time.NewTicker(10 * time.Millisecond)

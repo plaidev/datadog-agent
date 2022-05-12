@@ -8,6 +8,7 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/aggregator"
 	"github.com/DataDog/datadog-agent/pkg/aggregator/mocksender"
 	"github.com/DataDog/datadog-agent/pkg/config"
+	"github.com/DataDog/datadog-agent/pkg/netflow/goflowlib"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 	"github.com/cihub/seelog"
 	"github.com/stretchr/testify/assert"
@@ -193,12 +194,23 @@ network_devices:
 	require.NoError(t, err, "cannot start Netflow Server")
 	assert.NotNil(t, server)
 
+	// Testing using a dummyFlowProcessor since we can't test using real goflow flow processor
+	// due to this race condition https://github.com/netsampler/goflow2/issues/83
+	flowProcessor := &dummyFlowProcessor{}
+	listener := server.listeners[0]
+	listener.flowState = &goflowlib.FlowStateWrapper{
+		State:    flowProcessor,
+		Hostname: "abc",
+		Port:     port,
+	}
+
 	// Stops server
 	server.stop()
 
 	// Assert logs present
 	w.Flush()
 	logs := b.String()
+	assert.Equal(t, flowProcessor.stopped, true)
 	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` shutting down", port)), 1, logs)
 	assert.Equal(t, strings.Count(logs, fmt.Sprintf("Listener `0.0.0.0:%d` stopped", port)), 1, logs)
 }

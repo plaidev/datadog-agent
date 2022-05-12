@@ -16,9 +16,9 @@ const reusePort = false
 
 // FlowStateWrapper is a wrapper for StateNetFlow/StateSFlow/StateNFLegacy to provide additional info like hostname/port
 type FlowStateWrapper struct {
-	state    FlowRunnableState
-	hostname string
-	port     uint16
+	State    FlowRunnableState
+	Hostname string
+	Port     uint16
 }
 
 // FlowRunnableState provides common interface for StateNetFlow/StateSFlow/StateNFLegacy/etc
@@ -65,13 +65,13 @@ func StartFlowRoutine(flowType common.FlowType, hostname string, port uint16, fl
 		}
 	}()
 	return &FlowStateWrapper{
-		state:    flowState,
-		hostname: hostname,
-		port:     port,
+		State:    flowState,
+		Hostname: hostname,
+		Port:     port,
 	}, nil
 }
 
 // Shutdown is a wrapper for StateNetFlow/StateSFlow/StateNFLegacy Shutdown method
 func (s *FlowStateWrapper) Shutdown() {
-	s.state.Shutdown()
+	s.State.Shutdown()
 }
