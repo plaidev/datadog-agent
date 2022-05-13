@@ -1,70 +1,123 @@
 package common
 
-import "testing"
+import (
+	"bytes"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestFlow_AggregationHash(t *testing.T) {
-	type fields struct {
-		FlowType          FlowType
-		ReceivedTimestamp uint64
-		SamplingRate      uint64
-		Direction         uint32
-		SamplerAddr       string
-		StartTimestamp    uint64
-		EndTimestamp      uint64
-		Bytes             uint64
-		Packets           uint64
-		SrcAddr           string
-		DstAddr           string
-		EtherType         uint32
-		IPProtocol        uint32
-		SrcPort           uint32
-		DstPort           uint32
-		InputInterface    uint32
-		OutputInterface   uint32
-		SrcMac            uint64
-		DstMac            uint64
-		SrcMask           uint32
-		DstMask           uint32
-		Tos               uint32
-		NextHop           string
+	origFlow := Flow{
+		SrcAddr:        "1.2.3.4",
+		DstAddr:        "2.3.4.5",
+		IPProtocol:     6,
+		SrcPort:        2000,
+		DstPort:        80,
+		InputInterface: 1,
+		Tos:            0,
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		// TODO: Add test cases.
+	origHash := origFlow.AggregationHash()
+	assert.Equal(t, "f1c7f3f1048a8e6", origHash)
+
+	flow := origFlow
+	flow.SrcAddr = "1.2.3.5"
+	assert.NotEqual(t, origHash, flow.AggregationHash())
+
+	flow = origFlow
+	flow.DstAddr = "2.3.4.6"
+	assert.NotEqual(t, origHash, flow.AggregationHash())
+
+	flow = origFlow
+	flow.IPProtocol = 7
+	assert.NotEqual(t, origHash, flow.AggregationHash())
+
+	flow = origFlow
+	flow.SrcPort = 3000
+	assert.NotEqual(t, origHash, flow.AggregationHash())
+
+	flow = origFlow
+	flow.DstPort = 443
+	assert.NotEqual(t, origHash, flow.AggregationHash())
+
+	flow = origFlow
+	flow.InputInterface = 2
+	assert.NotEqual(t, origHash, flow.AggregationHash())
+
+	flow = origFlow
+	flow.Tos = 1
+	assert.NotEqual(t, origHash, flow.AggregationHash())
+
+	// OutputInterface is not a key field, changing it should not change the hash
+	flow = origFlow
+	flow.OutputInterface = 1
+	assert.Equal(t, origHash, flow.AggregationHash())
+
+	// EtherType is not a key field, changing it should not change the hash
+	flow = origFlow
+	flow.EtherType = 1
+	assert.Equal(t, origHash, flow.AggregationHash())
+}
+
+func TestFlow_AsJSONString(t *testing.T) {
+	origFlow := Flow{
+		FlowType:       TypeNetFlow9,
+		SrcAddr:        "1.2.3.4",
+		DstAddr:        "2.3.4.5",
+		SamplerAddr:    "127.0.0.1",
+		IPProtocol:     6,
+		SrcPort:        2000,
+		DstPort:        80,
+		InputInterface: 1,
+		Tos:            0,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f := &Flow{
-				FlowType:          tt.fields.FlowType,
-				ReceivedTimestamp: tt.fields.ReceivedTimestamp,
-				SamplingRate:      tt.fields.SamplingRate,
-				Direction:         tt.fields.Direction,
-				SamplerAddr:       tt.fields.SamplerAddr,
-				StartTimestamp:    tt.fields.StartTimestamp,
-				EndTimestamp:      tt.fields.EndTimestamp,
-				Bytes:             tt.fields.Bytes,
-				Packets:           tt.fields.Packets,
-				SrcAddr:           tt.fields.SrcAddr,
-				DstAddr:           tt.fields.DstAddr,
-				EtherType:         tt.fields.EtherType,
-				IPProtocol:        tt.fields.IPProtocol,
-				SrcPort:           tt.fields.SrcPort,
-				DstPort:           tt.fields.DstPort,
-				InputInterface:    tt.fields.InputInterface,
-				OutputInterface:   tt.fields.OutputInterface,
-				SrcMac:            tt.fields.SrcMac,
-				DstMac:            tt.fields.DstMac,
-				SrcMask:           tt.fields.SrcMask,
-				DstMask:           tt.fields.DstMask,
-				Tos:               tt.fields.Tos,
-				NextHop:           tt.fields.NextHop,
-			}
-			if got := f.AggregationHash(); got != tt.want {
-				t.Errorf("AggregationHash() = %v, want %v", got, tt.want)
-			}
-		})
+	expectedJSON := `{
+    "type":"netflow9",
+    "received_timestamp":0,
+    "sampling_rate":0,
+    "direction":0,
+    "sampler_addr":"127.0.0.1",
+    "start_timestamp":0,
+    "end_timestamp":0,
+    "bytes":0,
+    "packets":0,
+    "src_addr":"1.2.3.4",
+    "dst_addr":"2.3.4.5",
+    "ip_protocol":6,
+    "src_port":2000,
+    "dst_port":80,
+    "input_interface":1,
+    "output_interface":0,
+    "src_mac":0,
+    "dst_mac":0,
+    "src_mask":0,
+    "dst_mask":0,
+    "tos":0,
+    "next_hop":""
+}`
+	var expectedPretty bytes.Buffer
+	err := json.Indent(&expectedPretty, []byte(expectedJSON), "", "\t")
+	assert.NoError(t, err)
+
+	var actualPretty bytes.Buffer
+	err = json.Indent(&actualPretty, []byte(origFlow.AsJSONString()), "", "\t")
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedPretty.String(), actualPretty.String())
+}
+
+func TestFlow_TelemetryTags(t *testing.T) {
+	flow := Flow{
+		FlowType:       TypeNetFlow9,
+		SrcAddr:        "1.2.3.4",
+		DstAddr:        "2.3.4.5",
+		SamplerAddr:    "127.0.0.1",
+		IPProtocol:     6,
+		SrcPort:        2000,
+		DstPort:        80,
+		InputInterface: 1,
+		Tos:            0,
 	}
+	expectedTags := []string{"sample_addr:127.0.0.1", "flow_type:netflow9"}
+	assert.ElementsMatch(t, expectedTags, flow.TelemetryTags())
 }

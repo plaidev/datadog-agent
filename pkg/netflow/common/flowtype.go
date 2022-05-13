@@ -59,7 +59,7 @@ func GetFlowTypeByName(name FlowType) (FlowTypeDetail, error) {
 			return flowType, nil
 		}
 	}
-	return FlowTypeDetail{}, fmt.Errorf("flow type %s is not valid", name)
+	return FlowTypeDetail{}, fmt.Errorf("flow type `%s` is not valid", name)
 }
 
 // GetAllFlowTypes returns all flow names
