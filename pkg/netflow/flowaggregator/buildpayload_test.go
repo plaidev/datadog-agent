@@ -1,6 +1,7 @@
 package flowaggregator
 
 import (
+	coreconfig "github.com/DataDog/datadog-agent/pkg/config"
 	"github.com/DataDog/datadog-agent/pkg/netflow/common"
 	"github.com/DataDog/datadog-agent/pkg/netflow/payload"
 	"github.com/stretchr/testify/assert"
@@ -9,6 +10,7 @@ import (
 )
 
 func Test_buildPayload(t *testing.T) {
+	coreconfig.Datadog.Set("network_devices.namespace", "my-namespace")
 	tests := []struct {
 		name            string
 		flow            common.Flow
@@ -68,7 +70,7 @@ func Test_buildPayload(t *testing.T) {
 				},
 				Ingress:   payload.ObservationPoint{Interface: payload.Interface{Index: 10}},
 				Egress:    payload.ObservationPoint{Interface: payload.Interface{Index: 20}},
-				Namespace: "default",
+				Namespace: "my-namespace",
 				Host:      "COMP-C02CF0CWLVDP",
 				TCPFlags:  []string{"SYN", "ACK"},
 				NextHop: payload.NextHop{

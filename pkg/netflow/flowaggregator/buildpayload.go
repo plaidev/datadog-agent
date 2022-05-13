@@ -24,6 +24,7 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 	hostname, err := coreutil.GetHostname(context.TODO())
 	if err != nil {
 		log.Warnf("Error getting the hostname: %v", err)
+		hostname = ""
 	}
 
 	namespace := coreconfig.Datadog.GetString("network_devices.namespace")
