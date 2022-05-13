@@ -11,6 +11,7 @@ import (
 
 func Test_buildPayload(t *testing.T) {
 	coreconfig.Datadog.Set("network_devices.namespace", "my-namespace")
+	coreconfig.Datadog.Set("hostname", "my-hostname")
 	tests := []struct {
 		name            string
 		flow            common.Flow
@@ -71,7 +72,7 @@ func Test_buildPayload(t *testing.T) {
 				Ingress:   payload.ObservationPoint{Interface: payload.Interface{Index: 10}},
 				Egress:    payload.ObservationPoint{Interface: payload.Interface{Index: 20}},
 				Namespace: "my-namespace",
-				Host:      "COMP-C02CF0CWLVDP",
+				Host:      "my-hostname",
 				TCPFlags:  []string{"SYN", "ACK"},
 				NextHop: payload.NextHop{
 					IP: "10.10.10.30",
