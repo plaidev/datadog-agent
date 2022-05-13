@@ -44,8 +44,9 @@ network_devices:
 	require.NoError(t, err, "error sending udp packet")
 
 	// Get Event Platform Events
-	netflowEvents := demux.WaitEventPlatformEvents(epforwarder.EventTypeNetworkDevicesNetFlow, 6, 15*time.Second)
-	assert.Equal(t, len(netflowEvents), 6)
+	netflowEvents, err := demux.WaitEventPlatformEvents(epforwarder.EventTypeNetworkDevicesNetFlow, 6, 15*time.Second)
+	require.NoError(t, err, "error waiting event platform events")
+	assert.Equal(t, 6, len(netflowEvents))
 
 	actualFlow, err := findEventBySourceDest(netflowEvents, "10.129.2.1", "10.128.2.119")
 	assert.NoError(t, err)
@@ -73,7 +74,7 @@ network_devices:
 	assert.Equal(t, "default", actualFlow.Namespace)
 	hostname, _ := util.GetHostname(context.TODO())
 	assert.Equal(t, hostname, actualFlow.Host)
-	assert.Equal(t, []string{"SYN", "ACK"}, actualFlow.TCPFlags)
+	assert.ElementsMatch(t, []string{"SYN", "ACK"}, actualFlow.TCPFlags)
 	assert.Equal(t, "0.0.0.0", actualFlow.NextHop.IP)
 }
 

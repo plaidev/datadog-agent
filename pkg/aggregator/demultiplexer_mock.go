@@ -6,6 +6,7 @@
 package aggregator
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -82,26 +83,20 @@ func (a *TestAgentDemultiplexer) WaitForSamples(timeout time.Duration) []metrics
 }
 
 // WaitEventPlatformEvents returns the event platform events samples received by the demultiplexer.
-func (a *TestAgentDemultiplexer) WaitEventPlatformEvents(eventType string, minEvents int, timeout time.Duration) []*message.Message {
+func (a *TestAgentDemultiplexer) WaitEventPlatformEvents(eventType string, minEvents int, timeout time.Duration) ([]*message.Message, error) {
 	ticker := time.NewTicker(10 * time.Millisecond)
-	timeoutOn := time.Now().Add(timeout)
 	var savedEvents []*message.Message
 	for {
 		select {
 		case <-ticker.C:
 			allEvents := a.aggregator.GetEventPlatformEvents()
 			savedEvents = append(savedEvents, allEvents[eventType]...)
-			// this case could always take priority on the timeout case, we have to make sure
-			// we've not timeout
-			if time.Now().After(timeoutOn) {
-				return savedEvents
-			}
 
-			if len(savedEvents) > minEvents {
-				return savedEvents
+			if len(savedEvents) >= minEvents {
+				return savedEvents, nil
 			}
 		case <-time.After(timeout):
-			return nil
+			return nil, fmt.Errorf("waiting for %d events but only received %d", minEvents, len(savedEvents))
 		}
 	}
 }
