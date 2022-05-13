@@ -23,10 +23,9 @@ type NetflowConfig struct {
 
 // ListenerConfig contains configuration for a single flow listener
 type ListenerConfig struct {
-	FlowType       common.FlowType       `mapstructure:"flow_type"`
-	Port           uint16                `mapstructure:"port"`
-	BindHost       string                `mapstructure:"bind_host"`
-	FlowTypeDetail common.FlowTypeDetail `mapstructure:"-"`
+	FlowType common.FlowType `mapstructure:"flow_type"`
+	Port     uint16          `mapstructure:"port"`
+	BindHost string          `mapstructure:"bind_host"`
 }
 
 // ReadConfig builds and returns configuration from Agent configuration.
@@ -44,7 +43,6 @@ func ReadConfig() (*NetflowConfig, error) {
 		if err != nil {
 			return nil, fmt.Errorf("the provided flow type `%s` is not valid (valid flow types: %v)", listenerConfig.FlowType, common.GetAllFlowTypes())
 		}
-		listenerConfig.FlowTypeDetail = flowType
 
 		if listenerConfig.Port == 0 {
 			listenerConfig.Port = flowType.DefaultPort()
