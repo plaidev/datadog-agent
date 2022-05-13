@@ -30,6 +30,7 @@ network_devices:
       - flow_type: netflow9
         bind_host: 127.0.0.1
         port: 1234
+        workers: 10
 `,
 			expectedConfig: NetflowConfig{
 				StopTimeout:             10,
@@ -41,6 +42,7 @@ network_devices:
 						FlowType: common.TypeNetFlow9,
 						BindHost: "127.0.0.1",
 						Port:     uint16(1234),
+						Workers:  10,
 					},
 				},
 			},
@@ -64,6 +66,7 @@ network_devices:
 						FlowType: common.TypeNetFlow9,
 						BindHost: "localhost",
 						Port:     uint16(2055),
+						Workers:  1,
 					},
 				},
 			},

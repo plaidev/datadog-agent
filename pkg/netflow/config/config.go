@@ -26,6 +26,7 @@ type ListenerConfig struct {
 	FlowType common.FlowType `mapstructure:"flow_type"`
 	Port     uint16          `mapstructure:"port"`
 	BindHost string          `mapstructure:"bind_host"`
+	Workers  int             `mapstructure:"workers"`
 }
 
 // ReadConfig builds and returns configuration from Agent configuration.
@@ -53,6 +54,9 @@ func ReadConfig() (*NetflowConfig, error) {
 		if listenerConfig.BindHost == "" {
 			// Default to global bind_host option.
 			listenerConfig.BindHost = coreconfig.GetBindHost()
+		}
+		if listenerConfig.Workers == 0 {
+			listenerConfig.Workers = 1
 		}
 	}
 
