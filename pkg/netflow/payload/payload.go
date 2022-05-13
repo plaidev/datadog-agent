@@ -35,24 +35,23 @@ type ObservationPoint struct {
 
 // FlowPayload contains network devices flows
 type FlowPayload struct {
-	FlowType string `json:"type"`
-	//Timestamp    uint64           `json:"timestamp"`
-	SamplingRate uint64           `json:"sampling_rate"`
-	Direction    string           `json:"direction"`
-	Start        uint64           `json:"start"`
-	End          uint64           `json:"end"`
-	Bytes        uint64           `json:"bytes"`
-	Packets      uint64           `json:"packets"`
-	EtherType    string           `json:"ether_type"`
-	IPProtocol   string           `json:"ip_protocol"`
-	Tos          uint32           `json:"tos"`
-	Exporter     Exporter         `json:"exporter"`
-	Source       Endpoint         `json:"source"`
-	Destination  Endpoint         `json:"destination"`
-	Ingress      ObservationPoint `json:"ingress"`
-	Egress       ObservationPoint `json:"egress"`
-	Namespace    string           `json:"namespace"`
-	Host         string           `json:"host"`
-	TCPFlags     []string         `json:"tcp_flags"`
-	NextHop      NextHop          `json:"next_hop"`
+	FlowType          string           `json:"type"`
+	ReceivedTimestamp uint64           `json:"received_timestamp"`
+	SamplingRate      uint64           `json:"sampling_rate"`
+	Direction         string           `json:"direction"`
+	Start             uint64           `json:"start"`
+	End               uint64           `json:"end"`
+	Bytes             uint64           `json:"bytes"`
+	Packets           uint64           `json:"packets"`
+	EtherType         string           `json:"ether_type"`
+	IPProtocol        string           `json:"ip_protocol"`
+	Exporter          Exporter         `json:"exporter"`
+	Source            Endpoint         `json:"source"`
+	Destination       Endpoint         `json:"destination"`
+	Ingress           ObservationPoint `json:"ingress"`
+	Egress            ObservationPoint `json:"egress"`
+	Namespace         string           `json:"namespace"`
+	Host              string           `json:"host"`
+	TCPFlags          []string         `json:"tcp_flags"`
+	NextHop           NextHop          `json:"next_hop"`
 }
