@@ -84,6 +84,7 @@ func TestFlow_AsJSONString(t *testing.T) {
     "src_addr":"1.2.3.4",
     "dst_addr":"2.3.4.5",
     "ip_protocol":6,
+    "tcp_flags": 0,
     "src_port":2000,
     "dst_port":80,
     "input_interface":1,

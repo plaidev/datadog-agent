@@ -70,14 +70,14 @@ network_devices:
 	assert.Equal(t, "0.0.0.0/24", actualFlow.Source.Mask)
 	assert.Equal(t, "10.128.2.119", actualFlow.Destination.IP)
 	assert.Equal(t, uint32(8080), actualFlow.Destination.Port)
-	assert.Equal(t, "", actualFlow.Destination.Mac)
-	assert.Equal(t, "", actualFlow.Destination.Mask)
+	assert.Equal(t, "00:00:00:00:00:00", actualFlow.Destination.Mac)
+	assert.Equal(t, "0.0.0.0/24", actualFlow.Destination.Mask)
 	assert.Equal(t, uint32(1), actualFlow.Ingress.Interface.Index)
 	assert.Equal(t, uint32(7), actualFlow.Egress.Interface.Index)
 	assert.Equal(t, "default", actualFlow.Namespace)
 	hostname, _ := util.GetHostname(context.TODO())
 	assert.Equal(t, hostname, actualFlow.Host)
-	assert.ElementsMatch(t, []string{"SYN", "ACK"}, actualFlow.TCPFlags)
+	assert.ElementsMatch(t, []string{"SYN", "RST", "ACK"}, actualFlow.TCPFlags)
 	assert.Equal(t, "0.0.0.0", actualFlow.NextHop.IP)
 }
 
