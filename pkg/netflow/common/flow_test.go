@@ -118,6 +118,6 @@ func TestFlow_TelemetryTags(t *testing.T) {
 		InputInterface: 1,
 		Tos:            0,
 	}
-	expectedTags := []string{"sample_addr:127.0.0.1", "flow_type:netflow9"}
+	expectedTags := []string{"netflow_exporter:127.0.0.1", "flow_type:netflow9"}
 	assert.ElementsMatch(t, expectedTags, flow.TelemetryTags())
 }

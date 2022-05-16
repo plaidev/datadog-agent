@@ -82,7 +82,7 @@ func (f *Flow) AsJSONString() string {
 // TelemetryTags return tags used for telemetry
 func (f *Flow) TelemetryTags() []string {
 	return []string{
-		"sample_addr:" + f.SamplerAddr,
+		"netflow_exporter:" + f.SamplerAddr,
 		"flow_type:" + string(f.FlowType),
 	}
 }
