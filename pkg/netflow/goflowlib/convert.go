@@ -34,6 +34,7 @@ func ConvertFlow(srcFlow *flowpb.FlowMessage) *common.Flow {
 		OutputInterface:   srcFlow.OutIf,
 		Tos:               srcFlow.IPTos,
 		NextHop:           net.IP(srcFlow.NextHop).String(),
+		TCPFlags:          srcFlow.TCPFlags,
 	}
 }
 

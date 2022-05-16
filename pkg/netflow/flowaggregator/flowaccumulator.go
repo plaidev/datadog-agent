@@ -9,9 +9,9 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/netflow/common"
 )
 
-const flowFlushInterval = 60 // TODO: make it configurable
-const flowContextTTL = flowFlushInterval * 2
+var timeNow = time.Now
 
+// floWrapper contains flow information and additional flush related data
 type flowWrapper struct {
 	flow                *common.Flow
 	nextFlush           time.Time
@@ -20,22 +20,25 @@ type flowWrapper struct {
 
 // flowAccumulator is used to accumulate aggregated flows
 type flowAccumulator struct {
-	flows map[string]flowWrapper
-	mu    sync.Mutex
+	flows             map[string]flowWrapper
+	mu                sync.Mutex
+	flowFlushInterval time.Duration
+	flowContextTTL    time.Duration
 }
 
 func newFlowWrapper(flow *common.Flow) flowWrapper {
-	now := time.Now()
+	now := timeNow()
 	return flowWrapper{
-		flow:                flow,
-		nextFlush:           now,
-		lastSuccessfulFlush: now,
+		flow:      flow,
+		nextFlush: now,
 	}
 }
 
-func newFlowAccumulator() *flowAccumulator {
+func newFlowAccumulator(aggregatorFlushInterval time.Duration) *flowAccumulator {
 	return &flowAccumulator{
-		flows: make(map[string]flowWrapper),
+		flows:             make(map[string]flowWrapper),
+		flowFlushInterval: aggregatorFlushInterval,
+		flowContextTTL:    aggregatorFlushInterval * 5,
 	}
 }
 
@@ -43,9 +46,9 @@ func (f *flowAccumulator) flush() []*common.Flow {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	var flows []*common.Flow // TODO: init with optimal size
+	var flows []*common.Flow
 	for key, flow := range f.flows {
-		now := time.Now()
+		now := timeNow()
 		if flow.nextFlush.After(now) {
 			continue
 		}
@@ -53,10 +56,12 @@ func (f *flowAccumulator) flush() []*common.Flow {
 			flows = append(flows, flow.flow)
 			flow.lastSuccessfulFlush = now
 			flow.flow = nil
-		} else if time.Since(flow.lastSuccessfulFlush).Seconds() > flowContextTTL {
+		} else if flow.lastSuccessfulFlush.Add(f.flowContextTTL).Before(now) {
+			// delete flow wrapper if there is no successful flushes since `flowContextTTL`
 			delete(f.flows, key)
+			continue
 		}
-		flow.nextFlush = flow.nextFlush.Add(flowFlushInterval * time.Second)
+		flow.nextFlush = flow.nextFlush.Add(f.flowFlushInterval)
 		f.flows[key] = flow
 	}
 	return flows
@@ -69,8 +74,9 @@ func (f *flowAccumulator) add(flowToAdd *common.Flow) {
 	// TODO: handle port direction (see network-http-logger)
 	// TODO: ignore ephemeral ports
 
-	aggFlow, ok := f.flows[flowToAdd.AggregationHash()]
 	log.Tracef("New Flow (digest=%s): %+v", flowToAdd.AggregationHash(), flowToAdd)
+
+	aggFlow, ok := f.flows[flowToAdd.AggregationHash()]
 	aggHash := flowToAdd.AggregationHash()
 	if !ok {
 		f.flows[aggHash] = newFlowWrapper(flowToAdd)
@@ -80,31 +86,13 @@ func (f *flowAccumulator) add(flowToAdd *common.Flow) {
 		} else {
 			aggFlow.flow.Bytes += flowToAdd.Bytes
 			aggFlow.flow.Packets += flowToAdd.Packets
-			aggFlow.flow.ReceivedTimestamp = minUint64(aggFlow.flow.ReceivedTimestamp, flowToAdd.ReceivedTimestamp)
-			aggFlow.flow.StartTimestamp = minUint64(aggFlow.flow.StartTimestamp, flowToAdd.StartTimestamp)
-			aggFlow.flow.EndTimestamp = maxUint64(aggFlow.flow.EndTimestamp, flowToAdd.EndTimestamp)
+			aggFlow.flow.ReceivedTimestamp = common.MinUint64(aggFlow.flow.ReceivedTimestamp, flowToAdd.ReceivedTimestamp)
+			aggFlow.flow.StartTimestamp = common.MinUint64(aggFlow.flow.StartTimestamp, flowToAdd.StartTimestamp)
+			aggFlow.flow.EndTimestamp = common.MaxUint64(aggFlow.flow.EndTimestamp, flowToAdd.EndTimestamp)
+			aggFlow.flow.TCPFlags |= flowToAdd.TCPFlags
 
 			// TODO: Cumulate TCPFlags (Cumulative of all the TCP flags seen for this flow)
-
-			log.Tracef("Existing Aggregated Flow (digest=%s): %+v", flowToAdd.AggregationHash(), aggFlow)
-			log.Tracef("New Aggregated Flow (digest=%s): %+v", flowToAdd.AggregationHash(), aggFlow)
 		}
 		f.flows[aggHash] = aggFlow
 	}
-}
-
-func minUint64(a uint64, b uint64) uint64 {
-	// TODO: TESTME
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func maxUint64(a uint64, b uint64) uint64 {
-	// TODO: TESTME
-	if a > b {
-		return a
-	}
-	return b
 }
