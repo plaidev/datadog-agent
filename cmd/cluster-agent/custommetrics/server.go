@@ -13,12 +13,14 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/go-openapi/spec"
 	"github.com/kubernetes-sigs/custom-metrics-apiserver/pkg/apiserver"
 	basecmd "github.com/kubernetes-sigs/custom-metrics-apiserver/pkg/cmd"
 	"github.com/kubernetes-sigs/custom-metrics-apiserver/pkg/provider"
 	"github.com/spf13/pflag"
-	openapinamer "k8s.io/apiserver/pkg/endpoints/openapi"
-	genericapiserver "k8s.io/apiserver/pkg/server"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	openapicommon "k8s.io/kube-openapi/pkg/common"
 
 	"github.com/DataDog/datadog-agent/pkg/clusteragent/custommetrics"
 	generatedopenapi "github.com/DataDog/datadog-agent/pkg/clusteragent/custommetrics/api/generated/openapi"
@@ -43,6 +45,27 @@ const (
 	adapterVersion    = "1.0.0"
 )
 
+// DefaultOpenAPIConfig is lifted from k8s.io/apiserver/pkg/server/DefaultOpenAPIConfig
+func DefaultOpenAPIConfig(getDefinitions openapicommon.GetOpenAPIDefinitions, defNamer *apiopenapi.DefinitionNamer) *openapicommon.Config {
+	return &openapicommon.Config{
+		ProtocolList:   []string{"https"},
+		IgnorePrefixes: []string{},
+		Info: &spec.Info{
+			InfoProps: spec.InfoProps{
+				Title: "Generic API Server",
+			},
+		},
+		DefaultResponse: &spec.Response{
+			ResponseProps: spec.ResponseProps{
+				Description: "Default Response.",
+			},
+		},
+		GetOperationIDAndTags: apiopenapi.GetOperationIDAndTags,
+		GetDefinitionName:     defNamer.GetDefinitionName,
+		GetDefinitions:        getDefinitions,
+	}
+}
+
 // RunServer creates and start a k8s custom metrics API server
 func RunServer(ctx context.Context, apiCl *as.APIClient) error {
 	defer clearServerResources()
@@ -53,7 +76,17 @@ func RunServer(ctx context.Context, apiCl *as.APIClient) error {
 	cmd = &DatadogMetricsAdapter{}
 	cmd.Name = adapterName
 
-	cmd.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(generatedopenapi.GetOpenAPIDefinitions, openapinamer.NewDefinitionNamer(apiserver.Scheme))
+	scheme = runtime.NewScheme()
+	unversioned := schema.GroupVersion{Group: "", Version: "v1"}
+	scheme.AddUnversionedTypes(unversioned,
+		&metav1.Status{},
+		&metav1.APIVersions{},
+		&metav1.APIGroupList{},
+		&metav1.APIGroup{},
+		&metav1.APIResourceList{},
+	)
+
+	cmd.OpenAPIConfig = DefaultOpenAPIConfig(generatedopenapi.GetOpenAPIDefinitions, NewDefinitionNamer(scheme))
 	cmd.OpenAPIConfig.Info.Title = adapterName
 	cmd.OpenAPIConfig.Info.Version = adapterVersion
 
