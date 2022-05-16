@@ -34,6 +34,9 @@ type Flow struct {
 	// Layer 4 protocol
 	IPProtocol uint32 `json:"ip_protocol"` // FLOW KEY
 
+	// Flags
+	TCPFlags uint32 `json:"tcp_flags"`
+
 	// Ports for UDP and TCP
 	SrcPort uint32 `json:"src_port"` // FLOW KEY
 	DstPort uint32 `json:"dst_port"` // FLOW KEY

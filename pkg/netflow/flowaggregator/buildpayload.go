@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	coreconfig "github.com/DataDog/datadog-agent/pkg/config"
+	"github.com/DataDog/datadog-agent/pkg/netflow/enrichment"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 
 	coreutil "github.com/DataDog/datadog-agent/pkg/util"
@@ -13,17 +14,10 @@ import (
 )
 
 func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
-	var direction string
-
-	if aggFlow.Direction == 0 {
-		direction = "ingress"
-	} else {
-		direction = "egress"
-	}
-
 	hostname, err := coreutil.GetHostname(context.TODO())
 	if err != nil {
 		log.Warnf("Error getting the hostname: %v", err)
+		hostname = ""
 	}
 
 	namespace := coreconfig.Datadog.GetString("network_devices.namespace")
@@ -32,10 +26,11 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 	etherType := fmt.Sprintf("%d", aggFlow.EtherType)
 
 	return payload.FlowPayload{
-		FlowType: string(aggFlow.FlowType),
-		//Timestamp:    aggFlow.ReceivedTimestamp,
-		SamplingRate: aggFlow.SamplingRate,
-		Direction:    direction,
+		// TODO: Implement Tos
+		FlowType:          string(aggFlow.FlowType),
+		ReceivedTimestamp: aggFlow.ReceivedTimestamp,
+		SamplingRate:      aggFlow.SamplingRate,
+		Direction:         enrichment.RemapDirection(aggFlow.Direction),
 		Exporter: payload.Exporter{
 			IP: aggFlow.SamplerAddr,
 		},
@@ -45,18 +40,19 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		Packets:    aggFlow.Packets,
 		EtherType:  etherType,
 		IPProtocol: ipProtocol,
-		Tos:        aggFlow.Tos,
 		Source: payload.Endpoint{
 			IP:   aggFlow.SrcAddr,
 			Port: aggFlow.SrcPort,
-			// TODO: implement Mac
 			// TODO: implement Mask
-			Mac:  "00:00:00:00:00:00",
+			Mac: enrichment.FormatMacAddress(aggFlow.SrcMac),
+			//Mask: enrichment.FormatMask(aggFlow.SrcMask),
 			Mask: "0.0.0.0/24",
 		},
 		Destination: payload.Endpoint{
 			IP:   aggFlow.DstAddr,
 			Port: aggFlow.DstPort,
+			Mac:  enrichment.FormatMacAddress(aggFlow.DstMac),
+			Mask: "0.0.0.0/24",
 		},
 		Ingress: payload.ObservationPoint{
 			Interface: payload.Interface{
@@ -71,7 +67,7 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		Namespace: namespace,
 		Host:      hostname,
 		// TODO: implement tcp_flags
-		TCPFlags: []string{"SYN", "ACK"},
+		TCPFlags: enrichment.FormatFCPFlags(aggFlow.TCPFlags),
 		NextHop: payload.NextHop{
 			IP: aggFlow.NextHop,
 		},
