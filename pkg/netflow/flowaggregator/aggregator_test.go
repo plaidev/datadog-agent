@@ -10,11 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"net"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestAggregator(t *testing.T) {
+	stoppedMu := sync.RWMutex{} // Mutex needed to avoid race condition in test
+
 	coreconfig.Datadog.Set("hostname", "my-hostname")
 	sender := mocksender.NewMockSender("")
 	sender.On("Count", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
@@ -56,7 +59,9 @@ func TestAggregator(t *testing.T) {
 	expectedStoppedState := false
 	go func() {
 		aggregator.Start()
+		stoppedMu.Lock()
 		expectedStoppedState = true
+		stoppedMu.Unlock()
 	}()
 	inChan <- flow
 
@@ -120,5 +125,7 @@ func TestAggregator(t *testing.T) {
 	assert.False(t, expectedStoppedState)
 	aggregator.Stop()
 	time.Sleep(500 * time.Millisecond)
+	stoppedMu.Lock()
 	assert.True(t, expectedStoppedState)
+	stoppedMu.Unlock()
 }
