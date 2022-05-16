@@ -25,42 +25,39 @@ func setMockTimeNow(newTime time.Time) {
 func Test_flowAccumulator_add(t *testing.T) {
 	// Given
 	flowA1 := &common.Flow{
-		FlowType:          common.TypeNetFlow9,
-		ReceivedTimestamp: 1234567,
-		SamplerAddr:       net.IP([]byte{127, 0, 0, 1}).String(),
-		StartTimestamp:    1234568,
-		EndTimestamp:      1234569,
-		Bytes:             20,
-		Packets:           4,
-		SrcAddr:           net.IP([]byte{10, 10, 10, 10}).String(),
-		DstAddr:           net.IP([]byte{10, 10, 10, 20}).String(),
-		IPProtocol:        uint32(6),
-		SrcPort:           uint32(2000),
-		DstPort:           uint32(80),
+		FlowType:       common.TypeNetFlow9,
+		SamplerAddr:    net.IP([]byte{127, 0, 0, 1}).String(),
+		StartTimestamp: 1234568,
+		EndTimestamp:   1234569,
+		Bytes:          20,
+		Packets:        4,
+		SrcAddr:        net.IP([]byte{10, 10, 10, 10}).String(),
+		DstAddr:        net.IP([]byte{10, 10, 10, 20}).String(),
+		IPProtocol:     uint32(6),
+		SrcPort:        uint32(2000),
+		DstPort:        uint32(80),
 	}
 	flowA2 := &common.Flow{
-		FlowType:          common.TypeNetFlow9,
-		ReceivedTimestamp: 1234577,
-		SamplerAddr:       net.IP([]byte{127, 0, 0, 1}).String(),
-		StartTimestamp:    1234578,
-		EndTimestamp:      1234579,
-		Bytes:             10,
-		Packets:           2,
-		SrcAddr:           net.IP([]byte{10, 10, 10, 10}).String(),
-		DstAddr:           net.IP([]byte{10, 10, 10, 20}).String(),
-		IPProtocol:        uint32(6),
-		SrcPort:           uint32(2000),
-		DstPort:           uint32(80),
+		FlowType:       common.TypeNetFlow9,
+		SamplerAddr:    net.IP([]byte{127, 0, 0, 1}).String(),
+		StartTimestamp: 1234578,
+		EndTimestamp:   1234579,
+		Bytes:          10,
+		Packets:        2,
+		SrcAddr:        net.IP([]byte{10, 10, 10, 10}).String(),
+		DstAddr:        net.IP([]byte{10, 10, 10, 20}).String(),
+		IPProtocol:     uint32(6),
+		SrcPort:        uint32(2000),
+		DstPort:        uint32(80),
 	}
 	flowB1 := &common.Flow{
-		FlowType:          common.TypeNetFlow9,
-		ReceivedTimestamp: 1234567,
-		SamplerAddr:       net.IP([]byte{127, 0, 0, 1}).String(),
-		StartTimestamp:    1234568,
-		EndTimestamp:      1234569,
-		Bytes:             10,
-		Packets:           2,
-		SrcAddr:           net.IP([]byte{10, 10, 10, 10}).String(),
+		FlowType:       common.TypeNetFlow9,
+		SamplerAddr:    net.IP([]byte{127, 0, 0, 1}).String(),
+		StartTimestamp: 1234568,
+		EndTimestamp:   1234569,
+		Bytes:          10,
+		Packets:        2,
+		SrcAddr:        net.IP([]byte{10, 10, 10, 10}).String(),
 		// different destination addr
 		DstAddr:    net.IP([]byte{10, 10, 10, 30}).String(),
 		IPProtocol: uint32(6),
@@ -82,7 +79,6 @@ func Test_flowAccumulator_add(t *testing.T) {
 	assert.Equal(t, net.IP([]byte{10, 10, 10, 20}).String(), wrappedFlowA.flow.DstAddr)
 	assert.Equal(t, uint64(30), wrappedFlowA.flow.Bytes)
 	assert.Equal(t, uint64(6), wrappedFlowA.flow.Packets)
-	assert.Equal(t, uint64(1234567), wrappedFlowA.flow.ReceivedTimestamp)
 	assert.Equal(t, uint64(1234568), wrappedFlowA.flow.StartTimestamp)
 	assert.Equal(t, uint64(1234579), wrappedFlowA.flow.EndTimestamp)
 
@@ -98,18 +94,17 @@ func Test_flowAccumulator_flush(t *testing.T) {
 
 	// Given
 	flow := &common.Flow{
-		FlowType:          common.TypeNetFlow9,
-		ReceivedTimestamp: 1234567,
-		SamplerAddr:       net.IP([]byte{127, 0, 0, 1}).String(),
-		StartTimestamp:    1234568,
-		EndTimestamp:      1234569,
-		Bytes:             20,
-		Packets:           4,
-		SrcAddr:           net.IP([]byte{10, 10, 10, 10}).String(),
-		DstAddr:           net.IP([]byte{10, 10, 10, 20}).String(),
-		IPProtocol:        uint32(6),
-		SrcPort:           uint32(2000),
-		DstPort:           uint32(80),
+		FlowType:       common.TypeNetFlow9,
+		SamplerAddr:    net.IP([]byte{127, 0, 0, 1}).String(),
+		StartTimestamp: 1234568,
+		EndTimestamp:   1234569,
+		Bytes:          20,
+		Packets:        4,
+		SrcAddr:        net.IP([]byte{10, 10, 10, 10}).String(),
+		DstAddr:        net.IP([]byte{10, 10, 10, 20}).String(),
+		IPProtocol:     uint32(6),
+		SrcPort:        uint32(2000),
+		DstPort:        uint32(80),
 	}
 
 	// When

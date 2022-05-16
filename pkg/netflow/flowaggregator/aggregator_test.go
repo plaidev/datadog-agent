@@ -38,18 +38,17 @@ func TestAggregator(t *testing.T) {
 		},
 	}
 	flow := &common.Flow{
-		FlowType:          common.TypeNetFlow9,
-		ReceivedTimestamp: 1234567,
-		SamplerAddr:       net.IP([]byte{127, 0, 0, 1}).String(),
-		StartTimestamp:    1234568,
-		EndTimestamp:      1234569,
-		Bytes:             20,
-		Packets:           4,
-		SrcAddr:           net.IP([]byte{10, 10, 10, 10}).String(),
-		DstAddr:           net.IP([]byte{10, 10, 10, 20}).String(),
-		IPProtocol:        uint32(6),
-		SrcPort:           uint32(2000),
-		DstPort:           uint32(80),
+		FlowType:       common.TypeNetFlow9,
+		SamplerAddr:    net.IP([]byte{127, 0, 0, 1}).String(),
+		StartTimestamp: 1234568,
+		EndTimestamp:   1234569,
+		Bytes:          20,
+		Packets:        4,
+		SrcAddr:        net.IP([]byte{10, 10, 10, 10}).String(),
+		DstAddr:        net.IP([]byte{10, 10, 10, 20}).String(),
+		IPProtocol:     uint32(6),
+		SrcPort:        uint32(2000),
+		DstPort:        uint32(80),
 	}
 
 	aggregator := NewFlowAggregator(sender, &conf)
@@ -71,11 +70,10 @@ func TestAggregator(t *testing.T) {
 	event := []byte(`
 {
   "type": "netflow9",
-  "received_timestamp": 1234567,
   "sampling_rate": 0,
   "direction": "ingress",
-  "start": 1234568,
-  "end": 1234569,
+  "start": 1234568000,
+  "end": 1234569000,
   "bytes": 20,
   "packets": 4,
   "ether_type": "0",

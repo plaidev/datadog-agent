@@ -73,7 +73,6 @@ func TestFlow_AsJSONString(t *testing.T) {
 	}
 	expectedJSON := `{
     "type":"netflow9",
-    "received_timestamp":0,
     "sampling_rate":0,
     "direction":0,
     "sampler_addr":"127.0.0.1",

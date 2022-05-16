@@ -90,7 +90,6 @@ func (f *flowAccumulator) add(flowToAdd *common.Flow) {
 		} else {
 			aggFlow.flow.Bytes += flowToAdd.Bytes
 			aggFlow.flow.Packets += flowToAdd.Packets
-			aggFlow.flow.ReceivedTimestamp = common.MinUint64(aggFlow.flow.ReceivedTimestamp, flowToAdd.ReceivedTimestamp)
 			aggFlow.flow.StartTimestamp = common.MinUint64(aggFlow.flow.StartTimestamp, flowToAdd.StartTimestamp)
 			aggFlow.flow.EndTimestamp = common.MaxUint64(aggFlow.flow.EndTimestamp, flowToAdd.EndTimestamp)
 
