@@ -90,8 +90,6 @@ func (f *flowAccumulator) add(flowToAdd *common.Flow) {
 			aggFlow.flow.StartTimestamp = common.MinUint64(aggFlow.flow.StartTimestamp, flowToAdd.StartTimestamp)
 			aggFlow.flow.EndTimestamp = common.MaxUint64(aggFlow.flow.EndTimestamp, flowToAdd.EndTimestamp)
 			aggFlow.flow.TCPFlags |= flowToAdd.TCPFlags
-
-			// TODO: Cumulate TCPFlags (Cumulative of all the TCP flags seen for this flow)
 		}
 		f.flows[aggHash] = aggFlow
 	}
