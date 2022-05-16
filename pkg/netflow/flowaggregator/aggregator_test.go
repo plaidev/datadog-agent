@@ -56,11 +56,11 @@ func TestAggregator(t *testing.T) {
 	aggregator.flushInterval = 1 * time.Second
 	inChan := aggregator.GetFlowInChan()
 
-	expectedStoppedState := false
+	expectStartExisted := false
 	go func() {
 		aggregator.Start()
 		stoppedMu.Lock()
-		expectedStoppedState = true
+		expectStartExisted = true
 		stoppedMu.Unlock()
 	}()
 	inChan <- flow
@@ -121,11 +121,11 @@ func TestAggregator(t *testing.T) {
 	assert.NoError(t, err)
 	sender.AssertEventPlatformEvent(t, compactEvent.String(), "network-devices-netflow")
 
-	// Test aggregator.Stop()
-	assert.False(t, expectedStoppedState)
+	// Test aggregator Stop
+	assert.False(t, expectStartExisted)
 	aggregator.Stop()
 	time.Sleep(500 * time.Millisecond)
 	stoppedMu.Lock()
-	assert.True(t, expectedStoppedState)
+	assert.True(t, expectStartExisted)
 	stoppedMu.Unlock()
 }
