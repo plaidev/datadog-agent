@@ -12,7 +12,6 @@ import (
 func ConvertFlow(srcFlow *flowpb.FlowMessage) *common.Flow {
 	return &common.Flow{
 		FlowType:          convertFlowType(srcFlow.Type),
-		ReceivedTimestamp: srcFlow.TimeReceived,
 		SamplingRate:      srcFlow.SamplingRate,
 		Direction:         srcFlow.FlowDirection,
 		SamplerAddr:       net.IP(srcFlow.SamplerAddress).String(),

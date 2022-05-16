@@ -21,7 +21,6 @@ func Test_buildPayload(t *testing.T) {
 			name: "base case",
 			flow: common.Flow{
 				FlowType:          common.TypeNetFlow9,
-				ReceivedTimestamp: 1234567,
 				SamplingRate:      10,
 				Direction:         1,
 				SamplerAddr:       net.IP([]byte{127, 0, 0, 1}).String(),
@@ -46,16 +45,15 @@ func Test_buildPayload(t *testing.T) {
 				TCPFlags:          uint32(19), // 19 = SYN,ACK,FIN
 			},
 			expectedPayload: payload.FlowPayload{
-				FlowType:          "netflow9",
-				ReceivedTimestamp: 1234567,
-				SamplingRate:      10,
-				Direction:         "egress",
-				Start:             1234568,
-				End:               1234569,
-				Bytes:             10,
-				Packets:           2,
-				EtherType:         "1",
-				IPProtocol:        "6",
+				FlowType:     "netflow9",
+				SamplingRate: 10,
+				Direction:    "egress",
+				Start:        1234568000,
+				End:          1234569000,
+				Bytes:        10,
+				Packets:      2,
+				EtherType:    "1",
+				IPProtocol:   "6",
 				Exporter: payload.Exporter{
 					IP: "127.0.0.1",
 				},

@@ -28,14 +28,13 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 	return payload.FlowPayload{
 		// TODO: Implement Tos
 		FlowType:          string(aggFlow.FlowType),
-		ReceivedTimestamp: aggFlow.ReceivedTimestamp,
 		SamplingRate:      aggFlow.SamplingRate,
 		Direction:         enrichment.RemapDirection(aggFlow.Direction),
 		Exporter: payload.Exporter{
 			IP: aggFlow.SamplerAddr,
 		},
-		Start:      aggFlow.StartTimestamp,
-		End:        aggFlow.EndTimestamp,
+		Start:      aggFlow.StartTimestamp * 1000,
+		End:        aggFlow.EndTimestamp * 1000,
 		Bytes:      aggFlow.Bytes,
 		Packets:    aggFlow.Packets,
 		EtherType:  etherType,
