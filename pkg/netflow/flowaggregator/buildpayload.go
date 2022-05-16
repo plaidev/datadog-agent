@@ -27,9 +27,9 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 
 	return payload.FlowPayload{
 		// TODO: Implement Tos
-		FlowType:          string(aggFlow.FlowType),
-		SamplingRate:      aggFlow.SamplingRate,
-		Direction:         enrichment.RemapDirection(aggFlow.Direction),
+		FlowType:     string(aggFlow.FlowType),
+		SamplingRate: aggFlow.SamplingRate,
+		Direction:    enrichment.RemapDirection(aggFlow.Direction),
 		Exporter: payload.Exporter{
 			IP: aggFlow.SamplerAddr,
 		},
