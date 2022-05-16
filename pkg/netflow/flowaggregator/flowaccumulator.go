@@ -9,9 +9,6 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/netflow/common"
 )
 
-const flowFlushInterval = 60 // TODO: make it configurable
-const flowContextTTL = flowFlushInterval * 5
-
 var timeNow = time.Now
 
 // floWrapper contains flow information and additional flush related data
@@ -23,8 +20,10 @@ type flowWrapper struct {
 
 // flowAccumulator is used to accumulate aggregated flows
 type flowAccumulator struct {
-	flows map[string]flowWrapper
-	mu    sync.Mutex
+	flows             map[string]flowWrapper
+	mu                sync.Mutex
+	flowFlushInterval time.Duration
+	flowContextTTL    time.Duration
 }
 
 func newFlowWrapper(flow *common.Flow) flowWrapper {
@@ -35,9 +34,11 @@ func newFlowWrapper(flow *common.Flow) flowWrapper {
 	}
 }
 
-func newFlowAccumulator() *flowAccumulator {
+func newFlowAccumulator(aggregatorFlushInterval time.Duration) *flowAccumulator {
 	return &flowAccumulator{
-		flows: make(map[string]flowWrapper),
+		flows:             make(map[string]flowWrapper),
+		flowFlushInterval: aggregatorFlushInterval,
+		flowContextTTL:    aggregatorFlushInterval * 5,
 	}
 }
 
@@ -55,12 +56,12 @@ func (f *flowAccumulator) flush() []*common.Flow {
 			flows = append(flows, flow.flow)
 			flow.lastSuccessfulFlush = now
 			flow.flow = nil
-		} else if flow.lastSuccessfulFlush.Add(flowContextTTL * time.Second).Before(now) {
+		} else if flow.lastSuccessfulFlush.Add(f.flowContextTTL).Before(now) {
 			// delete flow wrapper if there is no successful flushes since `flowContextTTL`
 			delete(f.flows, key)
 			continue
 		}
-		flow.nextFlush = flow.nextFlush.Add(flowFlushInterval * time.Second)
+		flow.nextFlush = flow.nextFlush.Add(f.flowFlushInterval)
 		f.flows[key] = flow
 	}
 	return flows
