@@ -17,6 +17,7 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 	hostname, err := coreutil.GetHostname(context.TODO())
 	if err != nil {
 		log.Warnf("Error getting the hostname: %v", err)
+		hostname = ""
 	}
 
 	namespace := coreconfig.Datadog.GetString("network_devices.namespace")
@@ -25,10 +26,11 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 	etherType := fmt.Sprintf("%d", aggFlow.EtherType)
 
 	return payload.FlowPayload{
-		FlowType: string(aggFlow.FlowType),
-		//Timestamp:    aggFlow.ReceivedTimestamp,
-		SamplingRate: aggFlow.SamplingRate,
-		Direction:    enrichment.RemapDirection(aggFlow.Direction),
+		// TODO: Implement Tos
+		FlowType:          string(aggFlow.FlowType),
+		ReceivedTimestamp: aggFlow.ReceivedTimestamp,
+		SamplingRate:      aggFlow.SamplingRate,
+		Direction:         enrichment.RemapDirection(aggFlow.Direction),
 		Exporter: payload.Exporter{
 			IP: aggFlow.SamplerAddr,
 		},
@@ -38,7 +40,6 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		Packets:    aggFlow.Packets,
 		EtherType:  etherType,
 		IPProtocol: ipProtocol,
-		Tos:        aggFlow.Tos,
 		Source: payload.Endpoint{
 			IP:   aggFlow.SrcAddr,
 			Port: aggFlow.SrcPort,

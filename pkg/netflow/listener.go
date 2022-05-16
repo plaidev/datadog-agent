@@ -19,7 +19,7 @@ func (l *netflowListener) shutdown() {
 }
 
 func startFlowListener(listenerConfig config.ListenerConfig, flowAgg *flowaggregator.FlowAggregator) (*netflowListener, error) {
-	flowState, err := goflowlib.StartFlowRoutine(listenerConfig.FlowTypeDetail.Name(), listenerConfig.BindHost, listenerConfig.Port, flowAgg.GetFlowInChan())
+	flowState, err := goflowlib.StartFlowRoutine(listenerConfig.FlowType, listenerConfig.BindHost, listenerConfig.Port, listenerConfig.Workers, flowAgg.GetFlowInChan())
 	if err != nil {
 		return nil, err
 	}
