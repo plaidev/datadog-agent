@@ -49,6 +49,7 @@ func TestAggregator(t *testing.T) {
 		IPProtocol:     uint32(6),
 		SrcPort:        uint32(2000),
 		DstPort:        uint32(80),
+		TCPFlags:       19,
 	}
 
 	aggregator := NewFlowAggregator(sender, &conf)
@@ -90,8 +91,8 @@ func TestAggregator(t *testing.T) {
   "destination": {
     "ip": "10.10.10.20",
     "port": 80,
-    "mac": "",
-    "mask": ""
+    "mac": "00:00:00:00:00:00",
+    "mask": "0.0.0.0/24"
   },
   "ingress": {
     "interface": {
@@ -106,6 +107,7 @@ func TestAggregator(t *testing.T) {
   "namespace": "default",
   "host": "my-hostname",
   "tcp_flags": [
+    "FIN",
     "SYN",
     "ACK"
   ],
