@@ -15,7 +15,6 @@ import (
 )
 
 func TestNewNetflowServer(t *testing.T) {
-	startTime := time.Now()
 	// Setup NetFlow feature config
 	port := uint16(52055)
 	config.Datadog.SetConfigType("yaml")
