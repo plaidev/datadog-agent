@@ -8,10 +8,9 @@ import (
 
 // Flow contains flow info used for aggreagtion
 type Flow struct {
-	FlowType          FlowType `json:"type"`
-	ReceivedTimestamp uint64   `json:"received_timestamp"`
-	SamplingRate      uint64   `json:"sampling_rate"`
-	Direction         uint32   `json:"direction"`
+	FlowType     FlowType `json:"type"`
+	SamplingRate uint64   `json:"sampling_rate"`
+	Direction    uint32   `json:"direction"`
 
 	// Sampler information
 	SamplerAddr string `json:"sampler_addr"`
@@ -85,7 +84,7 @@ func (f *Flow) AsJSONString() string {
 // TelemetryTags return tags used for telemetry
 func (f *Flow) TelemetryTags() []string {
 	return []string{
-		"sample_addr:" + f.SamplerAddr,
+		"netflow_exporter:" + f.SamplerAddr,
 		"flow_type:" + string(f.FlowType),
 	}
 }

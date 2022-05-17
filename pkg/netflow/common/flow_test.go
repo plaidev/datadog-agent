@@ -73,7 +73,6 @@ func TestFlow_AsJSONString(t *testing.T) {
 	}
 	expectedJSON := `{
     "type":"netflow9",
-    "received_timestamp":0,
     "sampling_rate":0,
     "direction":0,
     "sampler_addr":"127.0.0.1",
@@ -119,6 +118,6 @@ func TestFlow_TelemetryTags(t *testing.T) {
 		InputInterface: 1,
 		Tos:            0,
 	}
-	expectedTags := []string{"sample_addr:127.0.0.1", "flow_type:netflow9"}
+	expectedTags := []string{"netflow_exporter:127.0.0.1", "flow_type:netflow9"}
 	assert.ElementsMatch(t, expectedTags, flow.TelemetryTags())
 }

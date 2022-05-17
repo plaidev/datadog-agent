@@ -12,9 +12,11 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/netflow/config"
 )
 
+const flowAggregatorFlushInterval = 10 * time.Second
+
 // FlowAggregator is used for space and time aggregation of NetFlow flows
 type FlowAggregator struct {
-	flowIn        chan *common.Flow // TODO: change to lighter struct than flowpb.FlowMessage ?
+	flowIn        chan *common.Flow
 	flushInterval time.Duration
 	flowAcc       *flowAccumulator
 	sender        aggregator.Sender
@@ -27,7 +29,7 @@ func NewFlowAggregator(sender aggregator.Sender, config *config.NetflowConfig) *
 	return &FlowAggregator{
 		flowIn:        make(chan *common.Flow, config.AggregatorBufferSize),
 		flowAcc:       newFlowAccumulator(time.Duration(config.AggregatorFlushInterval) * time.Second),
-		flushInterval: 10 * time.Second,
+		flushInterval: flowAggregatorFlushInterval,
 		sender:        sender,
 		stopChan:      make(chan struct{}),
 		logPayload:    config.LogPayloads,
@@ -43,7 +45,7 @@ func (agg *FlowAggregator) Start() {
 
 // Stop will stop running FlowAggregator
 func (agg *FlowAggregator) Stop() {
-	agg.stopChan <- struct{}{}
+	close(agg.stopChan)
 }
 
 // GetFlowInChan returns flow input chan
@@ -69,7 +71,6 @@ func (agg *FlowAggregator) sendFlows(flows []*common.Flow) {
 		agg.sender.Count("datadog.newflow.aggregator.flows_flushed", 1, "", flow.TelemetryTags())
 		flowPayload := buildPayload(flow)
 		payloadBytes, err := json.Marshal(flowPayload)
-		log.Tracef("EP Flow: %s", string(payloadBytes))
 		if err != nil {
 			log.Errorf("Error marshalling device metadata: %s", err)
 			continue
@@ -84,7 +85,6 @@ func (agg *FlowAggregator) flushLoop() {
 	if agg.flushInterval > 0 {
 		flushTicker = time.NewTicker(agg.flushInterval).C
 	} else {
-		// TODO: validate that flush interval is positive?
 		log.Debugf("flushInterval set to 0: will never flush automatically")
 	}
 
@@ -95,23 +95,19 @@ func (agg *FlowAggregator) flushLoop() {
 			return
 		// automatic flush sequence
 		case <-flushTicker:
-			agg.Flush()
+			agg.flush()
 		}
 	}
 }
 
 // Flush flushes the aggregator
-func (agg *FlowAggregator) Flush() int {
-	// TODO: Do we need both flush ?
-	//   - Aggregator flush
-	//   - Flow accumulator flush ?
-
+func (agg *FlowAggregator) flush() int {
 	flows := agg.flowAcc.flush()
 	log.Debugf("Flushing %d flows to the forwarder", len(flows))
 	if len(flows) == 0 {
 		return 0
 	}
-	// TODO: Add flush count telemetry e.g. aggregator newFlushCountStats()
+	// TODO: Add flush stats to agent telemetry e.g. aggregator newFlushCountStats()
 
 	// For debug purposes print out all flows
 	if agg.logPayload {
