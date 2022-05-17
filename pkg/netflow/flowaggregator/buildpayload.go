@@ -33,8 +33,8 @@ func buildPayload(aggFlow *common.Flow) payload.FlowPayload {
 		Exporter: payload.Exporter{
 			IP: aggFlow.SamplerAddr,
 		},
-		Start:      aggFlow.StartTimestamp * 1000,
-		End:        aggFlow.EndTimestamp * 1000,
+		Start:      aggFlow.StartTimestamp,
+		End:        aggFlow.EndTimestamp,
 		Bytes:      aggFlow.Bytes,
 		Packets:    aggFlow.Packets,
 		EtherType:  etherType,

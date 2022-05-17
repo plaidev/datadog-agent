@@ -38,8 +38,8 @@ type FlowPayload struct {
 	FlowType     string           `json:"type"`
 	SamplingRate uint64           `json:"sampling_rate"`
 	Direction    string           `json:"direction"`
-	Start        uint64           `json:"start"` // milliseconds
-	End          uint64           `json:"end"`   // milliseconds
+	Start        uint64           `json:"start"` // in seconds
+	End          uint64           `json:"end"`   // in seconds
 	Bytes        uint64           `json:"bytes"`
 	Packets      uint64           `json:"packets"`
 	EtherType    string           `json:"ether_type"`
