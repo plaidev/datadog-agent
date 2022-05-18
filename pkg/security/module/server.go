@@ -338,7 +338,7 @@ func (a *APIServer) RunSelfTest(ctx context.Context, params *api.RunSelfTestPara
 	if a.module.selfTester == nil {
 		return &api.SecuritySelfTestResultMessage{
 			Ok:    false,
-			Error: "self-test is disabled",
+			Error: "self-tests are disabled",
 		}, nil
 	}
 
@@ -452,7 +452,7 @@ func (a *APIServer) SendStats() error {
 
 // ReloadPolicies reloads the policies
 func (a *APIServer) ReloadPolicies(ctx context.Context, params *api.ReloadPoliciesParams) (*api.ReloadPoliciesResultMessage, error) {
-	if err := a.module.Reload(a.module.config.PoliciesDir); err != nil {
+	if err := a.module.ReloadPolicies(); err != nil {
 		return nil, err
 	}
 	return &api.ReloadPoliciesResultMessage{}, nil
