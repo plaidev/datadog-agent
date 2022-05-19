@@ -157,12 +157,7 @@ def gen_mocks(ctx):
             "Reporter",
             "Scheduler",
         ],
-
-        "./pkg/security/api": [
-            "SecurityModuleServer",
-            "SecurityModuleClient",
-            "SecurityModule_GetProcessEventsClient"
-        ],
+        "./pkg/security/api": ["SecurityModuleServer", "SecurityModuleClient", "SecurityModule_GetProcessEventsClient"],
     }
 
     for path, names in interfaces.items():
