@@ -162,7 +162,7 @@ def gen_mocks(ctx):
             "SecurityModuleServer",
             "SecurityModuleClient",
             "SecurityModule_GetProcessEventsClient"
-        ]
+        ],
     }
 
     for path, names in interfaces.items():
