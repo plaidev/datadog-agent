@@ -16,14 +16,14 @@ import (
 	"strings"
 
 	"github.com/DataDog/datadog-agent/pkg/security/probe"
-	"github.com/alecthomas/jsonschema"
+	"github.com/invopop/jsonschema"
 )
 
 func generateBackendJSON(output string) error {
 	reflector := jsonschema.Reflector{
 		ExpandedStruct: true,
 		DoNotReference: false,
-		TypeNamer:      jsonTypeNamer,
+		Namer:          jsonTypeNamer,
 	}
 	schema := reflector.Reflect(&probe.EventSerializer{})
 
