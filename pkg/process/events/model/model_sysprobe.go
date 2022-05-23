@@ -78,8 +78,8 @@ func ProcessEventToProcessMonitorinEvent(e *ProcessEvent) *ProcessMonitoringEven
 	}
 }
 
-// NewProcessMonitoringEvent returns a new mocked ProcessMonitoringEvent
-func NewProcessMonitoringEvent(evtType string, ts time.Time, pid uint32, exe string, args []string) *ProcessMonitoringEvent {
+// NewMockedProcessMonitoringEvent returns a new mocked ProcessMonitoringEvent
+func NewMockedProcessMonitoringEvent(evtType string, ts time.Time, pid uint32, exe string, args []string) *ProcessMonitoringEvent {
 	var forkTime, execTime, exitTime time.Time
 	switch evtType {
 	case Fork:
