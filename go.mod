@@ -201,7 +201,7 @@ require (
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0
-	k8s.io/apiserver v0.21.5
+	k8s.io/apiserver v0.24.0
 	k8s.io/autoscaler/vertical-pod-autoscaler v0.10.0
 	k8s.io/client-go v0.24.0
 	k8s.io/cri-api v0.21.5
@@ -393,9 +393,9 @@ require (
 	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	k8s.io/component-base v0.21.5 // indirect
+	k8s.io/component-base v0.24.0 // indirect
 	k8s.io/gengo v0.0.0-20210813121822-485abfe95c7c // indirect
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22 // indirect
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.30 // indirect
 	sigs.k8s.io/controller-runtime v0.7.2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
