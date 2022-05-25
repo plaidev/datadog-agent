@@ -143,7 +143,10 @@ func (m *Module) Start() error {
 		return err
 	}
 
-	m.probe.Start()
+	if err := m.probe.Start(); err != nil {
+		return err
+	}
+
 	m.reloader.Start()
 
 	if err := m.Reload(m.config.PoliciesDir); err != nil {
