@@ -16,7 +16,15 @@
     - mkdir -p $NIKOS_EMBEDDED_PATH
     - tar -xf /tmp/nikos.tar.gz -C $NIKOS_EMBEDDED_PATH
   script:
-    - inv -e system-probe.build --nikos-embedded-path=$NIKOS_EMBEDDED_PATH
+    - |
+      echo "deb http://deb.debian.org/debian buster-backports main" | tee -a /etc/apt/sources.list
+      apt update
+      LATEST_KERNEL_HEADERS=`apt-cache search --names-only linux-headers-5.* | sort | head -n 1 | cut -f 1 -d ' '`
+      KERNEL_SUFFIX="-$(echo $LATEST_KERNEL_HEADERS | rev | cut -d '-' -f 1 | rev)"
+      LATEST_KERNEL_HEADERS_COMMON=`apt-cache search --names-only linux-headers-5.* | grep "\-common" | sort | head -n 1 | cut -f 1 -d ' '`
+      apt install -y $LATEST_KERNEL_HEADERS $LATEST_KERNEL_HEADERS_COMMON
+      LATEST_VERSION=`echo $LATEST_KERNEL_HEADERS | cut -c15- | sed -e "s/$KERNEL_SUFFIX$//"`
+      inv -e system-probe.build --nikos-embedded-path=$NIKOS_EMBEDDED_PATH --kernel-release $LATEST_VERSION
     # fail if references to glibc >= 2.18
     - objdump -p $SRC_PATH/$SYSTEM_PROBE_BINARIES_DIR/system-probe | egrep 'GLIBC_2\.(1[8-9]|[2-9][0-9])' && exit 1
     - $S3_CP_CMD $SRC_PATH/$SYSTEM_PROBE_BINARIES_DIR/system-probe $S3_ARTIFACTS_URI/system-probe.$ARCH

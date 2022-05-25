@@ -391,9 +391,9 @@ def run_tidy(ctx, files, build_flags, fix=False, fail_on_issue=False, checks=Non
 
 
 @task
-def object_files(ctx, parallel_build=True):
+def object_files(ctx, parallel_build=True, kernel_release=''):
     """object_files builds the eBPF object files"""
-    build_object_files(ctx, parallel_build=parallel_build)
+    build_object_files(ctx, parallel_build=parallel_build, kernel_release=kernel_release)
 
 
 def get_ebpf_targets():
@@ -431,8 +431,7 @@ def get_linux_header_dirs(kernel_release=''):
 
     # fallback to the running kernel/build headers via /lib/modules/$(uname -r)/build/
     if len(linux_headers) == 0:
-        uname_r = check_output('''uname -r''', shell=True).decode('utf-8').strip()
-        build_dir = f"/lib/modules/{uname_r}/build"
+        build_dir = f"/lib/modules/{kernel_release}/build"
         if os.path.isdir(build_dir):
             linux_headers = [build_dir]
 

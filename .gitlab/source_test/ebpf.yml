@@ -10,7 +10,15 @@
   - tar -xf /tmp/nikos.tar.gz -C $NIKOS_EMBEDDED_PATH
 
 .build_sysprobe_artifacts:
-  - inv -e system-probe.object-files
+  - |
+    echo "deb http://deb.debian.org/debian buster-backports main" | tee -a /etc/apt/sources.list
+    apt update
+    LATEST_KERNEL_HEADERS=`apt-cache search --names-only linux-headers-5.* | sort | head -n 1 | cut -f 1 -d ' '`
+    KERNEL_SUFFIX="-$(echo $LATEST_KERNEL_HEADERS | rev | cut -d '-' -f 1 | rev)"
+    LATEST_KERNEL_HEADERS_COMMON=`apt-cache search --names-only linux-headers-5.* | grep "\-common" | sort | head -n 1 | cut -f 1 -d ' '`
+    apt install -y $LATEST_KERNEL_HEADERS $LATEST_KERNEL_HEADERS_COMMON
+    LATEST_VERSION=`echo $LATEST_KERNEL_HEADERS | cut -c15- | sed -e "s/$KERNEL_SUFFIX$//"`
+    inv -e system-probe.object-files --kernel-release $LATEST_VERSION
   - inv -e system-probe.kitchen-prepare
   - cp $SRC_PATH/pkg/ebpf/bytecode/build/tracer.o $CI_PROJECT_DIR/.tmp/binary-ebpf/tracer.o
   - cp $SRC_PATH/pkg/ebpf/bytecode/build/tracer-debug.o $CI_PROJECT_DIR/.tmp/binary-ebpf/tracer-debug.o
