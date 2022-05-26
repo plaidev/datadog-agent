@@ -29,7 +29,7 @@ import (
 type Scheduler struct {
 	mgr                schedulers.SourceManager
 	listener           *adlistener.ADListener
-	sourcesByServiceID map[string]*logsConfig.LogSource
+	sourcesByServiceID map[string][]*logsConfig.LogSource
 }
 
 var _ schedulers.Scheduler = &Scheduler{}
@@ -37,7 +37,7 @@ var _ schedulers.Scheduler = &Scheduler{}
 // New creates a new scheduler.
 func New(ac *autodiscovery.AutoConfig) schedulers.Scheduler {
 	sch := &Scheduler{
-		sourcesByServiceID: make(map[string]*logsConfig.LogSource),
+		sourcesByServiceID: make(map[string][]*logsConfig.LogSource),
 	}
 	sch.listener = adlistener.NewADListener("logs-agent AD scheduler", ac, sch.Schedule, sch.Unschedule)
 	return sch
@@ -78,7 +78,7 @@ func (s *Scheduler) Schedule(configs []integration.Config) {
 			}
 			for _, source := range sources {
 				s.mgr.AddSource(source)
-				s.sourcesByServiceID[source.Config.Identifier] = source
+				s.sourcesByServiceID[source.Config.Identifier] = append(s.sourcesByServiceID[source.Config.Identifier], source)
 			}
 		case s.newService(config):
 			entityType, _, err := s.parseEntity(config.TaggerEntity)
@@ -119,10 +119,16 @@ func (s *Scheduler) Unschedule(configs []integration.Config) {
 				log.Warnf("Invalid configuration: %v", err)
 				continue
 			}
-			if source, found := s.sourcesByServiceID[identifier]; found {
-				delete(s.sourcesByServiceID, identifier)
-				s.mgr.RemoveSource(source)
+
+			// remove all the sources for this ServiceID.  This makes the
+			// implicit assumption that we only ever receive one config for a
+			// given ServiceID, and that it generates the same sources.
+			if sources, found := s.sourcesByServiceID[identifier]; found {
+				for _, source := range sources {
+					s.mgr.RemoveSource(source)
+				}
 			}
+			delete(s.sourcesByServiceID, identifier)
 		case s.newService(config):
 			// new service to remove
 			entityType, _, err := s.parseEntity(config.TaggerEntity)
